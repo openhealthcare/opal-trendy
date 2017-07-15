@@ -28,7 +28,9 @@ class TrendyView(LoginRequiredMixin, TemplateView):
         if pl_slug:
             pl = patient_lists.PatientList.get(pl_slug)
             qs = pl().get_queryset()
+            context["listname"] = pl.display_name
         else:
             qs = models.Episode.objects.all()
         context["obj"] = SubrecordTrend().get_request_information(qs)
+
         return context
