@@ -27,7 +27,7 @@ class TrendyView(LoginRequiredMixin, TemplateView):
         pl_slug = self.request.GET.get('list', None)
         if pl_slug:
             pl = patient_lists.PatientList.get(pl_slug)
-            qs = pl.get_queryset()
+            qs = pl().get_queryset()
         else:
             qs = models.Episode.objects.all()
         context["obj"] = SubrecordTrend().get_request_information(qs)

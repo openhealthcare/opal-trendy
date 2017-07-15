@@ -35,6 +35,6 @@ class TrendyPlugin(plugins.OpalPlugin):
 
     menuitems = [
         menus.MenuItem(
-            href="/trendy/", display="Trendy", icon="fa fa-tasks",
+            href="/trendy/list", display="Trendy", icon="fa fa-tasks",
             activepattern='/trendy', index=1)
     ]
