@@ -26,23 +26,28 @@
       <div class="panel">
       <div class="panel-header">
             {% for subrecord_table in obj.subrecords %}
+
           <h3>{% if subrecord_table.subrecord.get_icon %}
                 {% icon subrecord_table.subrecord.get_icon %}
               {% endif %}
+
               {{ subrecord_table.subrecord.get_display_name }}</h3>
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                  <th>Item</th><th>Total</th>
+                  </tr>
+                </thead>
+                    {% for key,value in subrecord_table.popular.items %}
+                    <tr> <td> {{ key }} </td> <td> {{ value.total }} </tr>
+                    {% endfor %}
+              </table>
+
             {% endfor %}
 
-            <table class="table table-hover">
-              {% for popular_table in obj.subrecords %}
-            <tr>
-                {% for key,value in popular_table.popular.items %}
-                <td> {{ key }} {{ value.total }} </td>
-                {% endfor %}
-            </tr>
-              {% endfor %}
-            </table>
 
-  <!--            {{ obj.subrecords }} -->
+
+              {{ obj.subrecords }}
       </div>
 
       </div>
