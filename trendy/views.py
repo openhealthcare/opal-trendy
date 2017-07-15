@@ -1,25 +1,19 @@
 from django.views.generic import TemplateView
-from trends import SubrecordTrend
+from opal.core.views import LoginRequiredMixin
+from trendy.trends import SubrecordTrend
 # from opal.core import patient_lists
+import ipdb; ipdb.set_trace()
 
 
-"""
-Views for the trendy Opal Plugin
-"""
-# from django.views.generic import View
 
-# You might find these helpful !
-# from opal.core.views import LoginRequiredMixin, json_response
-
-
-class TrendyList(TemplateView):
+class TrendyList(LoginRequiredMixin, TemplateView):
     template_name = "trendy/trend_list.html"
 
     def get_context_data(self, *args, **kwargs):
         return SubrecordTrend().get_request_information()
 
 
-class TrendyView(TemplateView):
+class TrendyView(LoginRequiredMixin, TemplateView):
     template_name = "trendy/trend_detail.html"
 
     def get_context_data(self, **kwargs):
