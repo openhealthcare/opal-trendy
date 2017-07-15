@@ -17,9 +17,15 @@ class SubrecordTrend(object):
                 subrecord=Subrecord,
                 popular=[
                     dict(
-                        all=dict(total=400),
-                        something=dict(total=200),
-                        paracetomol=dict(total=100),
+                        all=dict(
+                            total=400
+                        ),
+                        something=dict(
+                            total=200
+                        ),
+                        paracetomol=dict(
+                            total=100
+                        ),
                     )
                 ]
             ))

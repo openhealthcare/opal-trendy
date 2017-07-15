@@ -7,5 +7,6 @@ from trendy import views
 
 urlpatterns = patterns(
     '',
+    url('^trendy/list$', views.TrendyView.as_view(), name="trends"),
     url('^trendy/$', views.TrendyView.as_view(), name="trends"),
 )
