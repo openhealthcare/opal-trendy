@@ -1,0 +1,27 @@
+{% extends 'opal.html' %}
+
+{% load plugins %}
+
+{% block ngapp %}opal.trendy{% endblock %}
+{% block angularapp %}
+  {% plugin_javascripts 'opal.trendy' %}
+{% endblock %}
+
+{% block content %}
+<div class="container content-offset">
+  <div class="panel panel-primary">
+    <!-- Default panel contents -->
+    <div class="panel-heading">
+      <h2>
+        <i class="fa fa-dashboard"></i>
+        Trendy
+      </h2>
+    </div>
+    <div class="panel-body">
+      hello there
+    </div>
+  </div>
+</div>
+{% endblock content %}
+
+{% block loading %}{% endblock %}

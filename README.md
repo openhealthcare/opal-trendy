@@ -1,0 +1,1 @@
+This is trendy - an [Opal](https://github.com/openhealthcare/opal) plugin.
