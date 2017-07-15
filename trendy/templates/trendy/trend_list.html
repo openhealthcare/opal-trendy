@@ -1,0 +1,27 @@
+{% extends 'opal.html' %}
+
+{% load plugins %}
+
+{% block ngapp %}opal.trendy{% endblock %}
+{% block angularapp %}
+  {% plugin_javascripts 'opal.trendy' %}
+{% endblock %}
+{% block content %}
+<div class="container content-offset">
+  <div class="panel">
+    <div class="panel-header">
+      Lists
+    </div>
+    <div class="panel-body">
+      {% for i in obj_list %}
+        <div class="row">
+          <div class="col-md-12">
+            <a href="/trendy/?list={{ i.slug }}">{{ i.display_name }}({{ i.count }})</a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

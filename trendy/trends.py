@@ -1,38 +1,49 @@
+from collections import OrderedDict
+
 from opal import models
 from opal.core.subrecords import episode_subrecords
+from opal.core.fields import ForeignKeyOrFreeText
 from django.db.models import Count, Min, F, Max, Avg
 
 
 class SubrecordTrend(object):
-
-    def get_request_information(self):
+    def get_request_information(self, qs):
         # team = request_get_args.pop("team")
-        qs = models.Episode.objects.all()
-        # qs = qs.filter(tagging__value=team)
 
         subrecords = []
 
         for Subrecord in episode_subrecords():
+            episode_subs = Subrecord.objects.filter(
+                episode__in=qs
+            )
+
+            field_names = Subrecord._get_fieldnames_to_serialize()
+            field_names = [
+                i for i in field_names if isinstance(getattr(Subrecord, i, None), ForeignKeyOrFreeText)
+            ]
+            subrecord_counts = OrderedDict()
+            subrecord_counts["all"] = dict(total=episode_subs.count())
+
+            if len(field_names):
+                field = "{}_fk".format(field_names[0])
+                field_totalled = episode_subs.annotate(
+                    field_total=Count(field)
+                ).order_by('field_total')
+                for row in field_totalled[:10]:
+                    if getattr(row, field):
+                        subrecord_counts[getattr(row, field).name] = dict(
+                            total=getattr(row, "field_total")
+                        )
+
             subrecords.append(dict(
                 subrecord=Subrecord,
-                popular=[
-                    dict(
-                        all=dict(
-                            total=400
-                        ),
-                        something=dict(
-                            total=200
-                        ),
-                        paracetomol=dict(
-                            total=100
-                        ),
-                    )
-                ]
+                popular=subrecord_counts
             ))
         return {
             "subrecords": subrecords,
             "team": "team"
         }
+
 
 
 
