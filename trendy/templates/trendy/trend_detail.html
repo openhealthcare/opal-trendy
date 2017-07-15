@@ -3,6 +3,7 @@
 {% load plugins %}
 
 {% load forms %}
+{% load trendy_utils %}
 
 
 
@@ -39,7 +40,7 @@
                   </tr>
                 </thead>
                     {% for key,value in subrecord_table.popular.items %}
-                    <tr> <td> {{ key }} </td> <td> {{ value.total }} </tr>
+                    <tr> <td><a href="{% append_to_request subrecord_table.subrecord.get_api_name subrecord_table.field key %}">{{ key }}</a> </td> <td> {{ value.total }} </tr>
                     {% endfor %}
               </table>
 

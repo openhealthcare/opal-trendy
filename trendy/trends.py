@@ -17,26 +17,40 @@ class SubrecordTrend(object):
                 episode__in=qs
             )
 
+            if Subrecord._is_singleton:
+                episode_subs = episode_subs.exclude(updated=None)
+            else:
+                episode_subs = episode_subs.exclude(created=None)
+
+            if not episode_subs.exists():
+                continue
+
             field_names = Subrecord._get_fieldnames_to_serialize()
             field_names = [
                 i for i in field_names if isinstance(getattr(Subrecord, i, None), ForeignKeyOrFreeText)
             ]
             subrecord_counts = OrderedDict()
+
             subrecord_counts["all"] = dict(total=episode_subs.count())
+            field = None
 
             if len(field_names):
                 field = "{}_fk".format(field_names[0])
-                field_totalled = episode_subs.annotate(
+                field_totalled = episode_subs.values(field).annotate(
                     field_total=Count(field)
                 ).order_by('field_total')
+
                 for row in field_totalled[:10]:
-                    if getattr(row, field):
-                        subrecord_counts[getattr(row, field).name] = dict(
-                            total=getattr(row, "field_total")
+                    if row.get(field, None):
+                        related = getattr(Subrecord, field_names[0]).foreign_model
+                        related = related.objects.get(id=row.get(field))
+                        subrecord_counts[related.name] = dict(
+                            total=row["field_total"]
                         )
 
             subrecords.append(dict(
                 subrecord=Subrecord,
+                field=field,
                 popular=subrecord_counts
             ))
         return {
