@@ -2,6 +2,10 @@
 
 {% load plugins %}
 
+{% load forms %}
+
+
+
 {% block ngapp %}opal.trendy{% endblock %}
 {% block angularapp %}
   {% plugin_javascripts 'opal.trendy' %}
@@ -18,8 +22,33 @@
       </h2>
     </div>
     <div class="panel-body">
-      hello there
-      {{ obj.subrecords }}
+
+      <div class="panel">
+      <div class="panel-header">
+            {% for subrecord_table in obj.subrecords %}
+          <h3>{% if subrecord_table.subrecord.get_icon %}
+                {% icon subrecord_table.subrecord.get_icon %}
+              {% endif %}
+              {{ subrecord_table.subrecord.get_display_name }}</h3>
+            {% endfor %}
+
+            <table class="table table-hover">
+              {% for popular_table in obj.subrecords %}
+            <tr>
+                {% for key,value in popular_table.popular.items %}
+                <td> {{ key }} {{ value.total }} </td>
+                {% endfor %}
+            </tr>
+              {% endfor %}
+            </table>
+
+  <!--            {{ obj.subrecords }} -->
+      </div>
+
+      </div>
+
+
+
     </div>
   </div>
 </div>
