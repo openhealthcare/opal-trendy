@@ -35,25 +35,26 @@ class TrendyView(LoginRequiredMixin, TemplateView):
         else:
             qs = models.Episode.objects.all()
 
-        for k, v in self.request.GET.items():
-            if k == "list":
-                continue
+        for k in self.request.GET.keys():
+            for v in self.request.GET.getlist(k):
+                if k == "list":
+                    continue
 
-            subrecord = get_subrecord_from_api_name(k.split("__")[0])
-            field_name = k.split("__")[1].rstrip("_fk")
-            field = getattr(subrecord, field_name)
-            related_model = field.foreign_model
+                subrecord = get_subrecord_from_api_name(k.split("__")[0])
+                field_name = k.split("__")[1].rstrip("_fk")
+                field = getattr(subrecord, field_name)
+                related_model = field.foreign_model
 
-            context["path"].append(dict(
-                subrecord=subrecord.get_display_name(),
-                field_value=v
-            ))
+                context["path"].append(dict(
+                    subrecord=subrecord.get_display_name(),
+                    field_value=v
+                ))
 
-            related_id = related_model.objects.filter(
-                name=v
-            )
+                related_id = related_model.objects.filter(
+                    name=v
+                )
 
-            qs = qs.filter(**{k: related_id})
+                qs = qs.filter(**{k: related_id})
 
         context["obj"] = SubrecordTrend().get_request_information(qs)
 

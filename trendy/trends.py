@@ -5,6 +5,10 @@ from opal.core.subrecords import episode_subrecords
 from opal.core.fields import ForeignKeyOrFreeText
 from django.db.models import Count, Min, F, Max, Avg
 
+FIELD_OVERRIDES = {
+    "antimicrobial": "drug"
+}
+
 
 class SubrecordTrend(object):
 
@@ -102,16 +106,19 @@ class SubrecordTrend(object):
             if not episode_subs.exists():
                 continue
 
-            field_names = Subrecord._get_fieldnames_to_serialize()
-            field_names = [
-                i for i in field_names if isinstance(getattr(Subrecord, i, None), ForeignKeyOrFreeText)
-            ]
+            if Subrecord.get_api_name() in FIELD_OVERRIDES:
+                field_names = [FIELD_OVERRIDES[Subrecord.get_api_name()]]
+            else:
+                field_names = Subrecord._get_fieldnames_to_serialize()
+                field_names = [
+                    i for i in field_names if isinstance(getattr(Subrecord, i, None), ForeignKeyOrFreeText)
+                ]
             subrecord_counts = OrderedDict()
 
             subrecord_counts["all"] = dict(total=episode_subs.count())
             field = None
-
             if len(field_names):
+                print "{0} {1}".format(Subrecord, field_names[0])
                 field = "{}_fk".format(field_names[0])
                 field_totalled = episode_subs.values(field).annotate(
                     field_total=Count(field)
