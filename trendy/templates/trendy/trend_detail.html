@@ -43,7 +43,15 @@
                       {% if key == 'all' %}
                         <tr> <td>Total</td> <td> {{ value.total }} </tr>
                       {% else %}
-                        <tr> <td><a href="{% append_to_request subrecord_table.subrecord.get_api_name subrecord_table.field key %}">{{ key }}</a> </td> <td> {{ value.total }} ({{ value.total|as_percentage_of:subrecord_table.popular.all.total }})</tr>
+                        <tr>
+                          <td>
+                            {% in_request subrecord_table key as my_custom_boolean_filter %}
+                            {% if my_custom_boolean_filter %}
+                              {{ key }}
+                            {% else %}
+                              <a href="{% append_to_request subrecord_table.subrecord.get_api_name subrecord_table.field key %}">{{ key }}</a>
+                            {% endif %}
+                        </td> <td> {{ value.total }} ({{ value.total|as_percentage_of:subrecord_table.popular.all.total }})</tr>
                       {% endif %}
                     {% endfor %}
 
