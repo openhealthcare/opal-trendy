@@ -36,12 +36,19 @@
               <table class="table table-hover">
                 <thead>
                   <tr>
-                  <th>Item</th><th>Total</th>
+                  <th>Item</th><th>Number</th>
                   </tr>
                 </thead>
                     {% for key,value in subrecord_table.popular.items %}
-                    <tr> <td><a href="{% append_to_request subrecord_table.subrecord.get_api_name subrecord_table.field key %}">{{ key }}</a> </td> <td> {{ value.total }} </tr>
+
+                      {% if key == 'all' %}
+                        <tr> <td> Total </td> <td> {{ value.total }} </tr>
+                      {% else %}
+                        <tr> <td><a href="{% append_to_request subrecord_table.subrecord.get_api_name subrecord_table.field key %}">{{ key }}</a> </td> <td> {{ value.total }} </tr>
+                      {% endif %}
+
                     {% endfor %}
+
               </table>
 
             {% endfor %}
