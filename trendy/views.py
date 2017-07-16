@@ -25,6 +25,7 @@ class TrendyView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(TrendyView, self).get_context_data(**kwargs)
+        context["path"] = []
         pl_slug = self.request.GET.get('list', None)
 
         if pl_slug:
@@ -39,8 +40,15 @@ class TrendyView(LoginRequiredMixin, TemplateView):
                 continue
 
             subrecord = get_subrecord_from_api_name(k.split("__")[0])
-            field = k.split("__")[1]
-            related_model = getattr(subrecord, field.rstrip("_fk")).foreign_model
+            field_name = k.split("__")[1].rstrip("_fk")
+            field = getattr(subrecord, field_name)
+            related_model = field.foreign_model
+
+            context["path"].append(dict(
+                subrecord=subrecord.get_display_name(),
+                field_value=v
+            ))
+
             related_id = related_model.objects.filter(
                 name=v
             )
