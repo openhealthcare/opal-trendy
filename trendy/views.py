@@ -1,4 +1,5 @@
 from django.views.generic import TemplateView
+from django.db.models.fields.related import ManyToManyField
 from opal.core.views import LoginRequiredMixin
 from opal import models
 from trendy.trends import SubrecordTrend
@@ -41,9 +42,17 @@ class TrendyView(LoginRequiredMixin, TemplateView):
                     continue
 
                 subrecord = get_subrecord_from_api_name(k.split("__")[0])
+                lookup = "{0}__{1}".format(subrecord.__name__.lower(), k.split("__")[1])
                 field_name = k.split("__")[1].rstrip("_fk")
-                field = getattr(subrecord, field_name)
-                related_model = field.foreign_model
+
+                if field_name in subrecord._meta.get_all_field_names():
+                    if isinstance(
+                        subrecord._meta.get_field(field_name), ManyToManyField
+                    ):
+                        related_model = subrecord._meta.get_field(field_name).related_model
+                else:
+                    field = getattr(subrecord, field_name)
+                    related_model = field.foreign_model
 
                 context["path"].append(dict(
                     subrecord=subrecord.get_display_name(),
@@ -54,7 +63,7 @@ class TrendyView(LoginRequiredMixin, TemplateView):
                     name=v
                 )
 
-                qs = qs.filter(**{k: related_id})
+                qs = qs.filter(**{lookup: related_id})
 
         context["obj"] = SubrecordTrend().get_request_information(qs)
 

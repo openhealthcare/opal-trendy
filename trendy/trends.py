@@ -3,15 +3,16 @@ from collections import OrderedDict
 from opal import models
 from opal.core.subrecords import episode_subrecords
 from opal.core.fields import ForeignKeyOrFreeText
+from django.db.models.fields.related import ManyToManyField
 from django.db.models import Count, Min, F, Max, Avg
 
 FIELD_OVERRIDES = {
-    "antimicrobial": "drug"
+    "antimicrobial": "drug",
+    "presenting_complaint": "symptoms"
 }
 
 
 class SubrecordTrend(object):
-
     def get_min(self, qs):
         # get's the min of all the subrecord mins
         min_args = []
@@ -55,6 +56,78 @@ class SubrecordTrend(object):
 
         return qs
 
+    def get_many_to_many_counts(self, Subrecord, qs, field):
+        episode_subs = Subrecord.objects.filter(
+            episode__in=qs
+        )
+        subrecord_counts = OrderedDict()
+        subrecord_counts["all"] = dict(total=episode_subs.count())
+
+        field_totalled = episode_subs.values(field).annotate(
+            field_total=Count(field)
+        ).order_by('-field_total')
+
+        for row in field_totalled[:10]:
+            if row.get(field, None):
+                field_obj = Subrecord._meta.get_field(field)
+                related = field_obj.related_model.objects.get(id=row.get(field))
+                subrecord_counts[related.name] = dict(
+                    total=row["field_total"]
+                )
+        return subrecord_counts
+
+    def get_subrecord_summary(self, Subrecord, qs):
+        episode_subs = Subrecord.objects.filter(
+            episode__in=qs
+        )
+
+        if Subrecord._is_singleton:
+            episode_subs = episode_subs.exclude(updated=None)
+        else:
+            episode_subs = episode_subs.exclude(created=None)
+
+        if not episode_subs.exists():
+            return
+
+        if Subrecord.get_api_name() in FIELD_OVERRIDES:
+            field_names = [FIELD_OVERRIDES[Subrecord.get_api_name()]]
+        else:
+            field_names = Subrecord._get_fieldnames_to_serialize()
+            field_names = [
+                i for i in field_names if isinstance(getattr(Subrecord, i, None), ForeignKeyOrFreeText)
+            ]
+        subrecord_counts = OrderedDict()
+
+        subrecord_counts["all"] = dict(total=episode_subs.count())
+        field = None
+        if len(field_names):
+            field = field_names[0]
+            if field in Subrecord._meta.get_all_field_names():
+                if isinstance(
+                    Subrecord._meta.get_field(field), ManyToManyField
+                ):
+                    subrecord_counts = self.get_many_to_many_counts(
+                        Subrecord, qs, field
+                    )
+            else:
+                field = "{}_fk".format(field_names[0])
+                field_totalled = episode_subs.values(field).annotate(
+                    field_total=Count(field)
+                ).order_by('-field_total')
+
+                for row in field_totalled[:10]:
+                    if row.get(field, None):
+                        related = getattr(Subrecord, field_names[0]).foreign_model
+                        related = related.objects.get(id=row.get(field))
+                        subrecord_counts[related.name] = dict(
+                            total=row["field_total"]
+                        )
+            return dict(
+                subrecord=Subrecord,
+                field=field,
+                popular=subrecord_counts
+            )
+
     def get_subrecord_difference(self, qs, f_base):
         # for each subrecord, give me the difference between
         # some f expression and when it was created or updated
@@ -94,49 +167,10 @@ class SubrecordTrend(object):
         qs = self.get_min_episode(qs)
 
         for Subrecord in episode_subrecords():
-            episode_subs = Subrecord.objects.filter(
-                episode__in=qs
-            )
+            summary = self.get_subrecord_summary(Subrecord, qs)
 
-            if Subrecord._is_singleton:
-                episode_subs = episode_subs.exclude(updated=None)
-            else:
-                episode_subs = episode_subs.exclude(created=None)
-
-            if not episode_subs.exists():
-                continue
-
-            if Subrecord.get_api_name() in FIELD_OVERRIDES:
-                field_names = [FIELD_OVERRIDES[Subrecord.get_api_name()]]
-            else:
-                field_names = Subrecord._get_fieldnames_to_serialize()
-                field_names = [
-                    i for i in field_names if isinstance(getattr(Subrecord, i, None), ForeignKeyOrFreeText)
-                ]
-            subrecord_counts = OrderedDict()
-
-            subrecord_counts["all"] = dict(total=episode_subs.count())
-            field = None
-            if len(field_names):
-                print "{0} {1}".format(Subrecord, field_names[0])
-                field = "{}_fk".format(field_names[0])
-                field_totalled = episode_subs.values(field).annotate(
-                    field_total=Count(field)
-                ).order_by('field_total')
-
-                for row in field_totalled[:10]:
-                    if row.get(field, None):
-                        related = getattr(Subrecord, field_names[0]).foreign_model
-                        related = related.objects.get(id=row.get(field))
-                        subrecord_counts[related.name] = dict(
-                            total=row["field_total"]
-                        )
-
-            subrecords.append(dict(
-                subrecord=Subrecord,
-                field=field,
-                popular=subrecord_counts
-            ))
+            if summary:
+                subrecords.append(summary)
         return {
             "subrecords": subrecords,
             "team": "team"
