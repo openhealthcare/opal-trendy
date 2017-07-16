@@ -40,13 +40,11 @@
                   </tr>
                 </thead>
                     {% for key,value in subrecord_table.popular.items %}
-
                       {% if key == 'all' %}
-                        <tr> <td> Total </td> <td> {{ value.total }} </tr>
+                        <tr> <td>Total</td> <td> {{ value.total }} </tr>
                       {% else %}
-                        <tr> <td><a href="{% append_to_request subrecord_table.subrecord.get_api_name subrecord_table.field key %}">{{ key }}</a> </td> <td> {{ value.total }} </tr>
+                        <tr> <td><a href="{% append_to_request subrecord_table.subrecord.get_api_name subrecord_table.field key %}">{{ key }}</a> </td> <td> {{ value.total }} ({{ value.total|as_percentage_of:subrecord_table.popular.all.total }})</tr>
                       {% endif %}
-
                     {% endfor %}
 
               </table>
