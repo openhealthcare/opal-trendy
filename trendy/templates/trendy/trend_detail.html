@@ -5,8 +5,6 @@
 {% load forms %}
 {% load trendy_utils %}
 
-
-
 {% block ngapp %}opal.trendy{% endblock %}
 {% block angularapp %}
   {% plugin_javascripts 'opal.trendy' %}
@@ -23,7 +21,13 @@
       </h2>
     </div>
     <div class="panel-body">
-        <h2> {{ listname }} </h2>
+        <h2>
+          {{ listname }}
+          {% for item in path %}
+             / {{ item.subrecord }}: {{item.field_value}}
+          {% endfor %}
+
+           </h2>
       <div class="panel">
       <div class="panel-header">
             {% for subrecord_table in obj.subrecords %}
@@ -47,7 +51,7 @@
                           <td>
                             {% in_request subrecord_table key as my_custom_boolean_filter %}
                             {% if my_custom_boolean_filter %}
-                              {{ key }}
+                              <div class="text-success"><strong>{{ key }}</strong></div>
                             {% else %}
                               <a href="{% append_to_request subrecord_table.subrecord.get_api_name subrecord_table.field key %}">{{ key }}</a>
                             {% endif %}
@@ -61,7 +65,8 @@
 
 
 
-              {{ obj.subrecords }}
+          {{ path }}
+
       </div>
 
       </div>
