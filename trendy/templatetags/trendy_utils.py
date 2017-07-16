@@ -4,6 +4,17 @@ register = template.Library()
 
 
 @register.simple_tag(takes_context=True)
+def createlink(context, number):
+    request = context["request"]
+    url = request.get_full_path()
+    if request.GET:
+        sep = "&"
+    else:
+        sep = "?"
+    newurl = sep.join(url.split(sep)[:number+1])
+    return newurl.format(url)
+
+@register.simple_tag(takes_context=True)
 def append_to_request(context, api_name, field, value):
     request = context["request"]
     url = request.get_full_path()
@@ -16,7 +27,6 @@ def append_to_request(context, api_name, field, value):
     return "{0}{1}__{2}={3}".format(
         url, api_name, field, value
     )
-
 
 @register.filter
 def as_percentage_of(part, whole):

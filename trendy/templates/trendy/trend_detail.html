@@ -22,9 +22,9 @@
     </div>
     <div class="panel-body">
         <h2>
-          {{ listname }}
+          <a href="{% createlink 0 %}">{{ listname }}</a>
           {% for item in path %}
-             / {{ item.subrecord }}: {{item.field_value}}
+             <span class="text-success">|</span> <a href="{% createlink forloop.counter %}">{{ item.subrecord }}: {{item.field_value}}</a>
           {% endfor %}
 
            </h2>
@@ -58,14 +58,8 @@
                         </td> <td> {{ value.total }} ({{ value.total|as_percentage_of:subrecord_table.popular.all.total }})</tr>
                       {% endif %}
                     {% endfor %}
-
               </table>
-
             {% endfor %}
-
-
-
-          {{ path }}
 
       </div>
 
