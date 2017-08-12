@@ -5,33 +5,45 @@ from opal import models
 from trendy.trends import SubrecordTrend
 from opal.core import patient_lists
 from opal.core.subrecords import get_subrecord_from_api_name
+from opal.models import Episode
+from opal.core.views import json_response
+
+
+def get_qs_from_pl(pl):
+    if hasattr(pl, "subtag"):
+        return Episode.objects.all().filter(tagging__value=pl.subtag)
+    elif hasattr(pl, "tag"):
+        return Episode.objects.all().filter(tagging__value=pl.tag)
+    else:
+        return pl.get_queryset()
 
 
 class TrendyList(LoginRequiredMixin, TemplateView):
     template_name = "trendy/trend_list.html"
 
     def get_context_data(self, *args, **kwargs):
-        result = []
+        result = [dict(
+            display_name="Total",
+            count=Episode.objects.all().count()
+        )]
         for l in patient_lists.PatientList.list():
             result.append(dict(
                 display_name=l.display_name,
                 slug=l.get_slug(),
-                count=l().get_queryset().count()
+                count=get_qs_from_pl(l()).count()
             ))
         return dict(obj_list=sorted(result, key=lambda x: -x["count"]))
 
 
-class TrendyView(LoginRequiredMixin, TemplateView):
-    template_name = "trendy/trend_detail.html"
-
+class AbstractTrendyFilterView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
-        context = super(TrendyView, self).get_context_data(**kwargs)
+        context = super(AbstractTrendyFilterView, self).get_context_data(**kwargs)
         context["path"] = []
         pl_slug = self.request.GET.get('list', None)
 
         if pl_slug:
             pl = patient_lists.PatientList.get(pl_slug)
-            qs = pl().get_queryset()
+            qs = get_qs_from_pl(pl())
             context["listname"] = pl.display_name
         else:
             qs = models.Episode.objects.all()
@@ -66,5 +78,12 @@ class TrendyView(LoginRequiredMixin, TemplateView):
                 qs = qs.filter(**{lookup: related_id})
 
         context["obj"] = SubrecordTrend().get_request_information(qs)
-
         return context
+
+
+class TrendyEpisodeView(AbstractTrendyFilterView):
+    template_name = "trendy/trend_episodes.html"
+
+
+class TrendyView(AbstractTrendyFilterView):
+    template_name = "trendy/trend_detail.html"

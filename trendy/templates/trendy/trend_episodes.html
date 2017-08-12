@@ -1,11 +1,6 @@
-{% extends 'opal.html' %}
-
-{% load plugins %}
-
-{% block ngapp %}opal.trendy{% endblock %}
-{% block angularapp %}
-  {% plugin_javascripts 'opal.trendy' %}
-{% endblock %}
+{% extends 'trendy/trend_base.html' %}
+{% load trendy_utils %}
+{% load forms %}
 {% block content %}
 <div class="container content-offset">
   <div style="height: 800px" class="panel panel-primary">

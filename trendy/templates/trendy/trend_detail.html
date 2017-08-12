@@ -1,14 +1,7 @@
-{% extends 'opal.html' %}
+{% extends 'trendy/trend_base.html' %}
 
-{% load plugins %}
-
-{% load forms %}
 {% load trendy_utils %}
-
-{% block ngapp %}opal.trendy{% endblock %}
-{% block angularapp %}
-  {% plugin_javascripts 'opal.trendy' %}
-{% endblock %}
+{% load forms %}
 
 {% block content %}
 <div class="container content-offset">
@@ -16,8 +9,10 @@
     <!-- Default panel contents -->
     <div class="panel-heading">
       <h2>
-        <i class="fa fa-dashboard"></i>
-        Trendy
+        <a href="/trendy/list">
+          <i class="fa fa-cubes"></i>
+          Trendy
+        </a>
       </h2>
     </div>
     <div class="panel-body">
@@ -40,7 +35,7 @@
               <table class="table table-hover">
                 <thead>
                   <tr>
-                  <th>Item</th><th>Number</th>
+                  <th style="width: 50%">Item</th><th style="width: 50%">Number</th>
                   </tr>
                 </thead>
                     {% for key,value in subrecord_table.popular.items %}
@@ -49,18 +44,18 @@
                       {% else %}
                         <tr>
                           <td>
-                            {% in_request subrecord_table key as my_custom_boolean_filter %}
-                            {% if my_custom_boolean_filter %}
+                            {% in_request subrecord_table key as selected_tag %}
+                            {% if selected_tag %}
                               <div class="text-success"><strong>{{ key }}</strong></div>
                             {% else %}
                               <a href="{% append_to_request subrecord_table.subrecord.get_api_name subrecord_table.field key %}">{{ key }}</a>
                             {% endif %}
-                        </td> <td> {{ value.total }} ({{ value.total|as_percentage_of:subrecord_table.popular.all.total }})</tr>
+                        </td>
+                        <td>{{ value.total }} ({{ value.total|as_percentage_of:subrecord_table.popular.all.total }})</td></tr>
                       {% endif %}
                     {% endfor %}
               </table>
             {% endfor %}
-
       </div>
 
       </div>
@@ -71,5 +66,3 @@
   </div>
 </div>
 {% endblock content %}
-
-{% block loading %}{% endblock %}
