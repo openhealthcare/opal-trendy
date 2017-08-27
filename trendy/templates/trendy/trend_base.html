@@ -102,35 +102,19 @@
     </script>
     <script>
       !(function(){
-
         Vue.directive('pie', {
-          bind: function (el, binding, vnode) {
-            // var graphParams = {
-            //   bindto: element[0],
-            //   data: {
-            //     // iris data from R
-            //     columns: scope.data,
-            //     // [
-            //     //   ['data1', 30],
-            //     //   ['data2', 120],
-            //     // ],
-            //     type : 'pie',
-            //     size: {
-            //       height: 25,
-            //       width: 50
-            //     }
-            //   }
-            // };
-
-
-            // var s = JSON.stringify
-            // el.innerHTML =
-            //   'name: '       + s(binding.name) + '<br>' +
-            //   'value: '      + s(binding.value) + '<br>' +
-            //   'expression: ' + s(binding.expression) + '<br>' +
-            //   'argument: '   + s(binding.arg) + '<br>' +
-            //   'modifiers: '  + s(binding.modifiers) + '<br>' +
-            //   'vnode keys: ' + Object.keys(vnode).join(', ')
+          inserted: function (el, binding, vnode) {
+            var graphParams = {
+              bindto: el[0],
+              data: {
+                columns: JSON.parse(binding.value),
+                type : 'pie',
+                size: {
+                  height: 25,
+                  width: 50
+                }
+              }
+            };
           }
         });
 
@@ -138,6 +122,7 @@
         {% for k, v in graph_vals.items %}
           data['{{ k }}'] = {{ v }};
         {% endfor %}
+        Vue.config.delimiters = ['[[', ']]'];
         new Vue({
           el: '#trendy-container',
           data: {

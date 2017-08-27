@@ -21,5 +21,5 @@ def pie_chart(context, queryset, subrecord_api_name, field):
         result.append([str(key), total_count])
 
     # context["graph_vals"] = json.dumps(result)
-    context["graph_vals"] = json.dumps(dict(hello='there'))
+    context["graph_vals"] = json.dumps(result)
     return context
