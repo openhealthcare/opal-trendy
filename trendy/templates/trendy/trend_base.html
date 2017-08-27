@@ -104,17 +104,17 @@
       !(function(){
         Vue.directive('pie', {
           inserted: function (el, binding, vnode) {
-            var graphParams = {
-              bindto: el[0],
-              data: {
-                columns: JSON.parse(binding.value),
-                type : 'pie',
-                size: {
-                  height: 25,
-                  width: 50
+            c3.generate({
+                bindto: el,
+                data: {
+                    // iris data from R
+                    columns: JSON.parse(binding.value),
+                    type : 'pie',
+                    onclick: function (d, i) { console.log("onclick", d, i); },
+                    onmouseover: function (d, i) { console.log("onmouseover", d, i); },
+                    onmouseout: function (d, i) { console.log("onmouseout", d, i); }
                 }
-              }
-            };
+            });
           }
         });
 

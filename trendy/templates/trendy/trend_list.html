@@ -1,6 +1,7 @@
 {% extends 'trendy/trend_base.html' %}
 
 {% load plugins %}
+{% load forms %}
 {% load trendy_visuals %}
 
 {% block content %}
@@ -15,11 +16,34 @@
       </h2>
     </div>
     <div class="panel-body">
-      <table class="table table-hover">
-        <th>
-          Patient Lists
-        </th>
-        {% pie_chart obj_list "demographics" "sex_fk" %}
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3>{% icon models.Demographics.get_icon %}
+            {{ models.Demographics.get_display_name }}
+          </h3>
+          </div>
+          <div class="panel-body">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="row">
+                  <div class="col-md-12">
+                    <h5>Sex</h5>
+                  </div>
+                </div>
+                {% pie_chart obj_list "demographics" "sex_fk" %}
+              </div>
+              <div class="col-md-6">
+                <div class="row">
+                  <div class="col-md-12">
+                    <h5>Ethnicity</h5>
+                  </div>
+                </div>
+                {% pie_chart obj_list "demographics" "ethnicity_fk" %}
+              </div>
+            </div>
+          </div>
+        </div>
+
         {% comment %}
         {% for i in obj_list %}
           <tr>
@@ -38,7 +62,6 @@
           </tr>
         {% endfor %}
         {% endcomment %}
-      </table>
     </div>
   </div>
 </div>
