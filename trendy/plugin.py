@@ -14,6 +14,8 @@ class TrendyPlugin(plugins.OpalPlugin):
     javascripts = {
         # Add your javascripts here!
         'opal.trendy': [
+            'js/trendy/app.js',
+            'js/trendy/directives.js',
             # 'js/trendy/app.js',
             # 'js/trendy/controllers/larry.js',
             # 'js/trendy/services/larry.js',

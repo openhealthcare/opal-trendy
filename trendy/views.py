@@ -22,34 +22,38 @@ class TrendyList(LoginRequiredMixin, TemplateView):
     template_name = "trendy/trend_list.html"
 
     def get_context_data(self, *args, **kwargs):
-        result = [dict(
-            display_name="Total",
-            count=Episode.objects.all().count()
-        )]
-        for l in patient_lists.PatientList.list():
-            result.append(dict(
-                display_name=l.display_name,
-                slug=l.get_slug(),
-                count=get_qs_from_pl(l()).count()
-            ))
-        return dict(obj_list=sorted(result, key=lambda x: -x["count"]))
+        return dict(obj_list=Episode.objects.all())
+        # result = [dict(
+        #     display_name="Total",
+        #     count=Episode.objects.all().count()
+        # )]
+        # for l in patient_lists.PatientList.list():
+        #     result.append(dict(
+        #         display_name=l.display_name,
+        #         slug=l.get_slug(),
+        #         count=get_qs_from_pl(l()).count()
+        #     ))
+        # return dict(
+        #     obj_list=sorted(result, key=lambda x: -x["count"])
+        # )
 
 
 class AbstractTrendyFilterView(LoginRequiredMixin, TemplateView):
-    def get_context_data(self, **kwargs):
-        context = super(AbstractTrendyFilterView, self).get_context_data(**kwargs)
-        context["path"] = []
+
+    def get_episodes_from_url(self, request):
+        path = []
+        listname = None
         pl_slug = self.request.GET.get('list', None)
 
         if pl_slug:
             pl = patient_lists.PatientList.get(pl_slug)
             qs = get_qs_from_pl(pl())
-            context["listname"] = pl.display_name
+            listname = pl.display_name
         else:
             qs = models.Episode.objects.all()
 
-        for k in self.request.GET.keys():
-            for v in self.request.GET.getlist(k):
+        for k in request.GET.keys():
+            for v in request.GET.getlist(k):
                 if k == "list":
                     continue
 
@@ -66,7 +70,7 @@ class AbstractTrendyFilterView(LoginRequiredMixin, TemplateView):
                     field = getattr(subrecord, field_name)
                     related_model = field.foreign_model
 
-                context["path"].append(dict(
+                path.append(dict(
                     subrecord=subrecord.get_display_name(),
                     field_value=v
                 ))
@@ -77,7 +81,15 @@ class AbstractTrendyFilterView(LoginRequiredMixin, TemplateView):
 
                 qs = qs.filter(**{lookup: related_id})
 
+        return listname, path, qs
+
+    def get_context_data(self, **kwargs):
+        listname, path, qs = self.get_episodes_from_url(self.request)
+        context = {}
+        context["listname"] = listname
+        context["path"] = path
         context["obj"] = SubrecordTrend().get_request_information(qs)
+
         return context
 
 

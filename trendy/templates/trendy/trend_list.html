@@ -1,13 +1,10 @@
-{% extends 'opal.html' %}
+{% extends 'trendy/trend_base.html' %}
 
 {% load plugins %}
+{% load trendy_visuals %}
 
-{% block ngapp %}opal.trendy{% endblock %}
-{% block angularapp %}
-  {% plugin_javascripts 'opal.trendy' %}
-{% endblock %}
 {% block content %}
-<div class="container content-offset">
+<div class="container content-offset" id="app">
   <div style="height: 800px" class="panel panel-primary">
     <div class="panel-heading">
       <h2>
@@ -22,6 +19,8 @@
         <th>
           Patient Lists
         </th>
+        {% pie_chart obj_list "demographics" "sex_fk" %}
+        {% comment %}
         {% for i in obj_list %}
           <tr>
             <td>
@@ -34,12 +33,13 @@
                   {{ i.display_name }}({{ i.count }})
                 </a>
               {% endif %}
+              {% pie_chart obj_list "demographics" "sex" %}
             </td>
           </tr>
         {% endfor %}
+        {% endcomment %}
       </table>
     </div>
   </div>
 </div>
-
 {% endblock %}
