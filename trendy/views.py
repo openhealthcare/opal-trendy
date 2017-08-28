@@ -2,9 +2,12 @@ from django.views.generic import TemplateView
 from django.db.models.fields.related import ManyToManyField
 from opal.core.views import LoginRequiredMixin
 from opal import models
+from opal.core.fields import ForeignKeyOrFreeText
 from trendy.trends import SubrecordTrend
 from opal.core import patient_lists
-from opal.core.subrecords import get_subrecord_from_api_name
+from opal.core.subrecords import (
+    get_subrecord_from_api_name, patient_subrecords
+)
 from opal.models import Episode
 from opal.core.views import json_response
 
@@ -16,26 +19,6 @@ def get_qs_from_pl(pl):
         return Episode.objects.all().filter(tagging__value=pl.tag)
     else:
         return pl.get_queryset()
-
-
-class TrendyList(LoginRequiredMixin, TemplateView):
-    template_name = "trendy/trend_list.html"
-
-    def get_context_data(self, *args, **kwargs):
-        return dict(obj_list=Episode.objects.all())
-        # result = [dict(
-        #     display_name="Total",
-        #     count=Episode.objects.all().count()
-        # )]
-        # for l in patient_lists.PatientList.list():
-        #     result.append(dict(
-        #         display_name=l.display_name,
-        #         slug=l.get_slug(),
-        #         count=get_qs_from_pl(l()).count()
-        #     ))
-        # return dict(
-        #     obj_list=sorted(result, key=lambda x: -x["count"])
-        # )
 
 
 class AbstractTrendyFilterView(LoginRequiredMixin, TemplateView):
@@ -58,28 +41,20 @@ class AbstractTrendyFilterView(LoginRequiredMixin, TemplateView):
                     continue
 
                 subrecord = get_subrecord_from_api_name(k.split("__")[0])
-                lookup = "{0}__{1}".format(subrecord.__name__.lower(), k.split("__")[1])
-                field_name = k.split("__")[1].rstrip("_fk")
+                field = k.split("__")[1]
+                lookup = "{0}__{1}".format(subrecord.__name__.lower(), field)
 
-                if field_name in subrecord._meta.get_all_field_names():
-                    if isinstance(
-                        subrecord._meta.get_field(field_name), ManyToManyField
-                    ):
-                        related_model = subrecord._meta.get_field(field_name).related_model
-                else:
-                    field = getattr(subrecord, field_name)
-                    related_model = field.foreign_model
+                if subrecord in patient_subrecords():
+                    lookup = "patient__{}".format(lookup)
 
-                path.append(dict(
-                    subrecord=subrecord.get_display_name(),
-                    field_value=v
-                ))
+                if isinstance(getattr(subrecord, field), ForeignKeyOrFreeText):
+                    if v == 'None':
+                        v = None
+                        lookup = "{}_fk".format(lookup)
+                    else:
+                        lookup = "{}_fk__name".format(lookup)
 
-                related_id = related_model.objects.filter(
-                    name=v
-                )
-
-                qs = qs.filter(**{lookup: related_id})
+                qs = qs.filter(**{lookup: v})
 
         return listname, path, qs
 
@@ -88,13 +63,16 @@ class AbstractTrendyFilterView(LoginRequiredMixin, TemplateView):
         context = {}
         context["listname"] = listname
         context["path"] = path
-        context["obj"] = SubrecordTrend().get_request_information(qs)
-
+        context["obj_list"] = qs
         return context
 
 
 class TrendyEpisodeView(AbstractTrendyFilterView):
     template_name = "trendy/trend_episodes.html"
+
+
+class TrendyList(AbstractTrendyFilterView):
+    template_name = "trendy/trend_list.html"
 
 
 class TrendyView(AbstractTrendyFilterView):

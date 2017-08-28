@@ -1,0 +1,20 @@
+{% load trendy_utils %}
+<table>
+  <tr>
+    <th>{{ field }}</th><th></th>
+  </tr>
+  {% for row in rows %}
+    <tr>
+      <td>
+        {% if row.link %}
+          <a href="{% append_to_request subrecord field row.field_value %}">{{ row.field_value }}</a>
+        {% else %}
+          <div class="text-success"><strong>{{ row.field_value }}</strong></div>
+        {% endif %}
+      </td>
+      <td>
+        {{ row.amount }}
+      </td>
+    </tr>
+  {% endfor %}
+</table>
