@@ -21,8 +21,7 @@
           {% for item in path %}
              <span class="text-success">|</span> <a href="{% createlink forloop.counter %}">{{ item.subrecord }}: {{item.field_value}}</a>
           {% endfor %}
-
-           </h2>
+       </h2>
       <div class="panel">
       <div class="panel-header">
             {% for subrecord_table in obj.subrecords %}
