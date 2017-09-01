@@ -89,44 +89,87 @@
         <div class="outer-container"></div>
       {% endblock %}
     </div>
-    <script>
-      // temporary for try outs
-      jQuery(function($){
 
-      	// Touch Device Detection
-      	var isTouchDevice = 'ontouchstart' in document.documentElement;
-      	if( isTouchDevice ) {
-      		$('body').addClass('touch');
-      	}
-      });
+    <script type="text/x-template" id="pie-chart-template">
+      <div>
+        <div style="height: 300px; width: 300px" v-pie="graphVals.aggregate"></div>
+          <ul>
+            <li v-for="row in graphVals.aggregate">
+              <div>
+                <a v-bind:href="appendToRequest(graphVals.subrecord, graphVals.field, row[0])">
+                  <span v-if="colours">
+                    <svg width="10" height="10">
+                      <rect width="10" height="10" v-bind:style='{fill: colours[row[0]]}' style="pointer-events: none;"></rect>
+                    </svg>
+                  </span>
+                  [[ row[0] ]]: [[ row[1] ]]
+                </a>
+              </div>
+            </li>
+          </ul>
+      </div>
     </script>
+
     <script>
       !(function(){
-        Vue.directive('pie', {
-          inserted: function (el, binding, vnode) {
-            c3.generate({
-                bindto: el,
-                data: {
-                    // iris data from R
-                    columns: JSON.parse(binding.value),
-                    type : 'pie',
-                    onclick: function (d, i) { console.log("onclick", d, i); },
-                    onmouseover: function (d, i) { console.log("onmouseover", d, i); },
-                    onmouseout: function (d, i) { console.log("onmouseout", d, i); }
-                }
-            });
+
+        Vue.config.delimiters = ['[[', ']]'];
+        Vue.component('pie-chart', {
+          props: ['graphVals'],
+          template: "#pie-chart-template",
+          delimiters: ['[[', ']]'],
+          methods: {
+            appendToRequest: function(apiName, field, value){
+              var currentHref = window.location.href;
+              if(currentHref.indexOf("?") === -1){
+                return currentHref + "?" + apiName + "__" + field + "=" + value;
+              }
+              else{
+                return currentHref + "&" + apiName + "__" + field + "=" + value;
+              }
+            }
+          },
+          data: function(){
+            return {
+              colours: null
+            };
           }
         });
 
-        var data = {};
-        {% for k, v in graph_vals.items %}
-          data['{{ k }}'] = {{ v }};
-        {% endfor %}
-        Vue.config.delimiters = ['[[', ']]'];
+        Vue.directive('pie', {
+          inserted: function (el, binding, vnode) {
+            var someChart = c3.generate({
+              bindto: el,
+              data: {
+                // iris data from R
+                columns: binding.value,
+                type : 'pie',
+                onclick: function (d, i) { console.log("onclick", d, i); },
+                onmouseover: function (d, i) { console.log("onmouseover", d, i); },
+                onmouseout: function (d, i) { console.log("onmouseout", d, i); }
+              },
+              legend: {
+                show: false
+              }
+            });
+            var colours = {}
+            _.each(binding.value, function(graphVal){
+              colours[graphVal[0]] = someChart.color(graphVal[0]);
+            });
+
+            vnode.context.colours = colours;
+          }
+        });
+
+
+
         new Vue({
           el: '#trendy-container',
-          data: {
-            graphVals: data
+          delimiters: ['[[', ']]'],
+          methods: {
+            wo: function(){
+              alert('there');
+            }
           }
         });
       }());

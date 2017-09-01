@@ -39,7 +39,11 @@ def aggregate_free_text_or_foreign_key(qs, subrecord, field_name):
 )
 def pie_chart(context, queryset, subrecord_api_name, field):
     result = aggregate_field(queryset, subrecord_api_name, field)
-    context["graph_vals"] = json.dumps(result)
+    context["graph_vals"] = json.dumps(dict(
+        aggregate=result,
+        field=field,
+        subrecord=subrecord_api_name
+    ))
     return context
 
 
