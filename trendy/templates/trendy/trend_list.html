@@ -1,14 +1,11 @@
 {% extends 'trendy/trend_base.html' %}
 
-{% load plugins %}
-{% load forms %}
-{% load trendy_visuals %}
 {% load trendy_utils %}
 
 
 {% block content %}
 <div class="container content-offset" id="app">
-  <div style="height: 800px" class="panel panel-primary">
+  <div class="panel panel-primary">
     <div class="panel-heading">
       <h2>
         <a href="/trendy/list">
@@ -18,61 +15,17 @@
       </h2>
     </div>
     <div class="panel-body">
-        <h2>
-          <a href="{% createlink 0 %}">{{ listname }}</a>
-          {% for item in path %}
-             <span class="text-success">|</span> <a href="{% createlink forloop.counter %}">{{ item.subrecord }}: {{item.field_value}}</a>
-          {% endfor %}
-       </h2>
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            <h3>{% icon models.Demographics.get_icon %}
-            {{ models.Demographics.get_display_name }}
-          </h3>
-          </div>
-          <div class="panel-body">
-            <div class="row">
-              <div class="col-md-6">
-                <div class="row">
-                  <div class="col-md-12">
-                    <h5>Sex</h5>
-                  </div>
-                </div>
-                {% pie_chart obj_list "demographics" "sex" %}
-                {% comment %}
-                {% trendy_table obj_list "demographics" "sex" %}
-                {% endcomment %}
-              </div>
-              <div class="col-md-6">
-                <div class="row">
-                  <div class="col-md-12">
-                    <h5>Ethnicity</h5>
-                  </div>
-                </div>
-                {% pie_chart obj_list "demographics" "ethnicity" %}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {% comment %}
-        {% for i in obj_list %}
-          <tr>
-            <td>
-              {% if i.display_name == 'Total' %}
-              <a style="display: block" href="/trendy/">
-                {{ i.display_name }}({{ i.count }})
-              </a>
-              {% else %}
-                <a style="display: block" href="/trendy/?list={{ i.slug }}">
-                  {{ i.display_name }}({{ i.count }})
-                </a>
-              {% endif %}
-              {% pie_chart obj_list "demographics" "sex" %}
-            </td>
-          </tr>
+      <h4>
+        <a href="{% url 'trendy_home' %}">
+          Home
+        </a>
+        {% for item in path %}
+           <span class="text-success">|</span> <a href="{% createlink forloop.counter %}">{{ item.subrecord }}-{{ item.field }}: {{ item.field_value }}</a>
         {% endfor %}
-        {% endcomment %}
+        > {{ obj_list.count }} episodes
+      </h4>
+      {% include "demographics"|trend_template %}
+      {% include "diagnosis"|trend_template %}
     </div>
   </div>
 </div>

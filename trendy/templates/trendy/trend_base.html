@@ -91,8 +91,9 @@
     </div>
 
     <script type="text/x-template" id="pie-chart-template">
-      <div>
-        <div style="height: 300px; width: 300px" v-pie="graphVals.aggregate"></div>
+      <div class="row">
+        <div class="col-md-6" style="height: 300px;" v-pie="graphVals.aggregate"></div>
+        <div class="col-md-6">
           <ul>
             <li v-for="row in graphVals.aggregate">
               <div>
@@ -107,8 +108,16 @@
               </div>
             </li>
           </ul>
+        </div>
       </div>
     </script>
+
+    <script type="text/x-template" id="gauge-chart-template">
+      <div>
+        <div style="height: 100px; width: 300px" v-gauge="graphVals.aggregate"></div>
+      </div>
+    </script>
+
 
     <script>
       !(function(){
@@ -161,16 +170,34 @@
           }
         });
 
+        Vue.component('gauge-chart', {
+          props: ['graphVals'],
+          template: "#gauge-chart-template",
+          delimiters: ['[[', ']]'],
+        });
 
+        Vue.directive('gauge', {
+          inserted: function (el, binding, vnode) {
+            var someChart = c3.generate({
+              bindto: el,
+              data: {
+                // iris data from R
+                columns: binding.value,
+                type : 'gauge',
+                onclick: function (d, i) { console.log("onclick", d, i); },
+                onmouseover: function (d, i) { console.log("onmouseover", d, i); },
+                onmouseout: function (d, i) { console.log("onmouseout", d, i); }
+              },
+              legend: {
+                show: false
+              }
+            });
+          }
+        });
 
         new Vue({
           el: '#trendy-container',
           delimiters: ['[[', ']]'],
-          methods: {
-            wo: function(){
-              alert('there');
-            }
-          }
         });
       }());
     </script>

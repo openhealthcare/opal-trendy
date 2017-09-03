@@ -3,7 +3,7 @@ from django.db.models.fields.related import ManyToManyField
 from opal.core.views import LoginRequiredMixin
 from opal import models
 from opal.core.fields import ForeignKeyOrFreeText
-from trendy.trends import SubrecordTrend
+# from trendy.trends import SubrecordTrend
 from opal.core import patient_lists
 from opal.core.subrecords import (
     get_subrecord_from_api_name, patient_subrecords
@@ -53,6 +53,12 @@ class AbstractTrendyFilterView(LoginRequiredMixin, TemplateView):
                         lookup = "{}_fk".format(lookup)
                     else:
                         lookup = "{}_fk__name".format(lookup)
+
+                path.append(dict(
+                    subrecord=subrecord.get_display_name(),
+                    field=subrecord._get_field_title(field),
+                    field_value=v
+                ))
 
                 qs = qs.filter(**{lookup: v})
 

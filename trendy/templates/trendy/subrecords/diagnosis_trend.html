@@ -1,0 +1,36 @@
+{% load forms %}
+{% load trendy_visuals %}
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3>{% icon models.Diagnosis.get_icon %}
+      {{ models.Diagnosis.get_display_name }}
+    </h3>
+  </div>
+  <div class="panel-body">
+    <div class="row">
+      <div class="col-md-6">
+        {% pie_chart obj_list "diagnosis" "condition" label="Condition" %}
+      </div>
+      <div class="col-md-3">
+        <div class="row">
+          <div class="col-md-12">
+            {% empty_field_gauge obj_list "diagnosis" "condition" label="With no condition" %}
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            {% non_coded_gauge obj_list "diagnosis" "condition" label="With a non coded condition" %}
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="row">
+          <div class="col-md-12">
+            {% missing_subrecord_gauge obj_list "diagnosis" "condition" label="With no diagnosis" %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

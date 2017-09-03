@@ -1,6 +1,7 @@
 from django import template
 import json
 from opal.core.views import OpalSerializer
+from trendy.trends import Trend
 
 
 register = template.Library()
@@ -14,7 +15,7 @@ def createlink(context, number):
         sep = "&"
     else:
         sep = "?"
-    newurl = sep.join(url.split(sep)[:number+1])
+    newurl = sep.join(url.split(sep)[:number])
     return newurl.format(url)
 
 
@@ -28,12 +29,9 @@ def append_to_request(context, api_name, field, value):
     else:
         url = "{}?".format(url)
 
-    try:
-        return "{0}{1}__{2}={3}".format(
-            url, api_name, field, value
-        )
-    except:
-        return request.get_full_path()
+    return "{0}{1}__{2}={3}".format(
+        url, api_name, field, value
+    )
 
 
 @register.filter
@@ -41,18 +39,12 @@ def as_json(subrecord, request):
     return json.dumps([subrecord.to_json(request.user)], cls=OpalSerializer)
 
 
-@register.filter
-def as_percentage_of(part, whole):
-    try:
-        return "%d%%" % (float(part) / whole * 100)
-    except (ValueError, ZeroDivisionError):
-        return ""
+def trend_template(subrecord_api_name):
+    trend = Trend.get_trend(subrecord_api_name)
 
+    if trend is None:
+        return Trend.template_name
+    else:
+        return trend.template_name
 
-@register.assignment_tag(takes_context=True)
-def in_request(context, subrecord_table, value, *args):
-    subrecord = subrecord_table["subrecord"]
-    field = subrecord_table["field"]
-    field_key = "{0}__{1}".format(subrecord.get_api_name(), field)
-    values = context["request"].GET.getlist(field_key, [])
-    return value in values
+register.filter('trend_template', trend_template)
