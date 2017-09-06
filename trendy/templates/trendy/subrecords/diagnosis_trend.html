@@ -10,24 +10,24 @@
   <div class="panel-body">
     <div class="row">
       <div class="col-md-6">
-        {% pie_chart obj_list "diagnosis" "condition" label="Condition" %}
+        {% pie_chart "subrecord_break_down" obj_list "diagnosis" field="condition" %}
       </div>
       <div class="col-md-3">
         <div class="row">
           <div class="col-md-12">
-            {% empty_field_gauge obj_list "diagnosis" "condition" label="With no condition" %}
+            {% gauge_trend "non_coded_gauge" obj_list "diagnosis" field="condition" label="With a non coded condition" %}
           </div>
         </div>
         <div class="row">
           <div class="col-md-12">
-            {% non_coded_gauge obj_list "diagnosis" "condition" label="With a non coded condition" %}
+            {% gauge_trend "empty_field_gauge" obj_list "diagnosis" field="condition" label="With an empty condition" %}
           </div>
         </div>
       </div>
       <div class="col-md-3">
         <div class="row">
           <div class="col-md-12">
-            {% missing_subrecord_gauge obj_list "diagnosis" "condition" label="With no diagnosis" %}
+            {% gauge_trend "missing_subrecord_gauge" obj_list "diagnosis" label="With no diagnosis" %}
           </div>
         </div>
       </div>

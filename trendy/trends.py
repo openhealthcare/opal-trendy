@@ -6,8 +6,10 @@
 # from opal.core.fields import ForeignKeyOrFreeText
 # from django.db.models.fields.related import ManyToManyField
 # from django.db.models import Count, Min, F, Max, Avg
-from opal.core import subrecords
 from opal.core import discoverable
+from trendy.mixins.gauge_mixin import GaugeMixin
+from trendy.mixins.pie_chart_mixin import PieChartMixin
+# from trendy.mixins.pie_chart_mixin impot PieChartMixin
 
 # FIELD_OVERRIDES = {
 #     "antimicrobial": "drug",
@@ -15,7 +17,7 @@ from opal.core import discoverable
 # }
 
 
-class Trend(discoverable.DiscoverableFeature):
+class Trend(GaugeMixin, PieChartMixin, discoverable.DiscoverableFeature):
     module_name = "trends"
     template_name = "trendy/subrecords/default_trend.html"
 

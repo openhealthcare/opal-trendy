@@ -10,10 +10,10 @@
   <div class="panel-body">
     <div class="row">
       <div class="col-md-6">
-        {% pie_chart obj_list "demographics" "sex" label="Sex" %}
+        {% pie_chart "subrecord_break_down" obj_list "demographics" field="sex" %}
       </div>
       <div class="col-md-6">
-        {% pie_chart obj_list "demographics" "ethnicity" label="Ethnicity" %}
+        {% pie_chart "subrecord_break_down" obj_list "demographics" field="ethnicity" %}
       </div>
     </div>
   </div>
