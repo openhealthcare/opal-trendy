@@ -6,9 +6,16 @@
 # from opal.core.fields import ForeignKeyOrFreeText
 # from django.db.models.fields.related import ManyToManyField
 # from django.db.models import Count, Min, F, Max, Avg
+import datetime
 from opal.core import discoverable
+from opal.core import subrecords
+from dateutil.relativedelta import relativedelta
 from trendy.mixins.gauge_mixin import GaugeMixin
 from trendy.mixins.pie_chart_mixin import PieChartMixin
+from trendy.mixins.bar_chart_mixin import BarChartMixin
+from trendy.utils import get_subrecord_qs_from_episode_qs
+import json
+
 # from trendy.mixins.pie_chart_mixin impot PieChartMixin
 
 # FIELD_OVERRIDES = {
@@ -17,7 +24,9 @@ from trendy.mixins.pie_chart_mixin import PieChartMixin
 # }
 
 
-class Trend(GaugeMixin, PieChartMixin, discoverable.DiscoverableFeature):
+class Trend(
+    GaugeMixin, PieChartMixin, BarChartMixin, discoverable.DiscoverableFeature
+):
     module_name = "trends"
     template_name = "trendy/subrecords/default_trend.html"
 
@@ -31,6 +40,62 @@ class Trend(GaugeMixin, PieChartMixin, discoverable.DiscoverableFeature):
 class DemographicsTrend(Trend):
     subrecord_api_name = "demographics"
     template_name = "trendy/subrecords/demographics_trend.html"
+
+    def age_bar_chart(
+        self,
+        episode_queryset,
+        subrecord_api_name,
+        get_params,
+        user
+    ):
+        subrecord = subrecords.get_subrecord_from_api_name(subrecord_api_name)
+        result = {}
+        age_groups = [
+            [0, 20],
+            [20, 40],
+            [40, 60],
+            [60, 80],
+            [80]
+        ]
+
+        qs = get_subrecord_qs_from_episode_qs(subrecord, episode_queryset)
+
+        age_counts = []
+        today = datetime.date.today()
+
+        for age_group in age_groups:
+            start_dt = today - relativedelta(years=age_group[0])
+            age_group_qs = qs.filter(date_of_birth__gte=start_dt)
+
+            if len(age_group) == 1:
+                age_counts.append(age_group_qs.count())
+            else:
+                end_dt = today - relativedelta(years=age_group[1])
+                age_counts.append(
+                    age_group_qs.filter(date_of_birth__lt=end_dt).count()
+                )
+
+        age_counts.insert(0, "Age")
+        x_axis = ["x"]
+
+        for age_group in age_groups:
+            if len(age_group) == 1:
+                x_axis.append(
+                    "{} +".format(age_group[0])
+                )
+            else:
+                x_axis.append(
+                    "{0} - {1}".format(*age_group)
+                )
+
+        result["graph_vals"] = json.dumps(dict(
+            aggregate=[
+                x_axis,
+                age_counts
+            ],
+            subrecord=subrecord_api_name
+        ))
+        return result
 
 
 class DiagnosisTrend(Trend):

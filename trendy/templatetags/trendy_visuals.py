@@ -56,6 +56,20 @@ def pie_chart(
     return context
 
 
+@register.inclusion_tag(
+    'templatetags/trendy/bar_chart.html', takes_context=True
+)
+def bar_chart(
+        context, function, queryset, subrecord_api_name, field=None, label=None
+):
+
+    context.update(run_trend_function(
+        context, function, queryset, subrecord_api_name, label, field=field
+    ))
+    return context
+
+
+
 # @register.inclusion_tag('templatetags/trendy/table.html', takes_context=True)
 # def trendy_table(context, queryset, subrecord_api_name, field_name):
 #     """

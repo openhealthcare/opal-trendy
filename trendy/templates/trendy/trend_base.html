@@ -118,6 +118,12 @@
       </div>
     </script>
 
+    <script type="text/x-template" id="bar-chart-template">
+      <div>
+        <div style="height: 300px;" v-bar="graphVals.aggregate"></div>
+      </div>
+    </script>
+
 
     <script>
       !(function(){
@@ -194,6 +200,38 @@
             });
           }
         });
+
+        Vue.component('bar-chart', {
+          props: ['graphVals'],
+          template: "#bar-chart-template",
+          delimiters: ['[[', ']]'],
+        });
+
+        Vue.directive('bar', {
+          inserted: function (el, binding, vnode) {
+            var someChart = c3.generate({
+              bindto: el,
+              data: {
+                // iris data from R
+                x : 'x',
+                columns: binding.value,
+                type : 'bar',
+                onclick: function (d, i) { console.log("onclick", d, i); },
+                onmouseover: function (d, i) { console.log("onmouseover", d, i); },
+                onmouseout: function (d, i) { console.log("onmouseout", d, i); }
+              },
+              legend: {
+                show: false
+              },
+              axis: {
+                  x: {
+                      type: 'category'
+                  }
+              }
+            });
+          }
+        });
+
 
         new Vue({
           el: '#trendy-container',
