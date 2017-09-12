@@ -1,7 +1,8 @@
 from opal.core import subrecords
-import json
+from trendy import decorators
 from trendy.utils import (
-    aggregate_free_text_or_foreign_key, get_subrecord_qs_from_episode_qs
+    aggregate_free_text_or_foreign_key,
+    get_subrecord_qs_from_episode_qs
 )
 from opal.core.fields import ForeignKeyOrFreeText
 
@@ -26,21 +27,13 @@ class PieChartMixin(object):
         provides all pie chart methods
     """
 
+    @decorators.subrecord_attr
     def subrecord_break_down(
         self,
         queryset,
         subrecord_api_name,
-        get_params,
-        user,
+        request,
         field
     ):
         subrecord = subrecords.get_subrecord_from_api_name(subrecord_api_name)
-        result = aggregate_field(queryset, subrecord, field)
-        context = {}
-        context["template"] = "templatetags/trendy/pie_chart.html"
-        context["graph_vals"] = json.dumps(dict(
-            aggregate=result,
-            field=field,
-            subrecord=subrecord_api_name
-        ))
-        return context
+        return aggregate_field(queryset, subrecord, field)

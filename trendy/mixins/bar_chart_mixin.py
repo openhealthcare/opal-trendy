@@ -14,8 +14,7 @@ class BarChartMixin(object):
         self,
         queryset,
         subrecord_api_name,
-        get_params,
-        user,
+        request,
         field
     ):
         # we split out

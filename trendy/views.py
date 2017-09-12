@@ -1,15 +1,14 @@
 from django.views.generic import TemplateView
-from django.db.models.fields.related import ManyToManyField
 from opal.core.views import LoginRequiredMixin
 from opal import models
 from opal.core.fields import ForeignKeyOrFreeText
+from trendy.trends import Trend
 # from trendy.trends import SubrecordTrend
 from opal.core import patient_lists
 from opal.core.subrecords import (
     get_subrecord_from_api_name, patient_subrecords
 )
 from opal.models import Episode
-from opal.core.views import json_response
 
 
 def get_qs_from_pl(pl):
@@ -19,6 +18,55 @@ def get_qs_from_pl(pl):
         return Episode.objects.all().filter(tagging__value=pl.tag)
     else:
         return pl.get_queryset()
+
+
+def get_path_and_qs_from(get_param, value, qs):
+    subrecord = get_subrecord_from_api_name(get_param.split("__")[0])
+    field = get_param.split("__")[1]
+
+    lookup = "{0}__{1}".format(subrecord.__name__.lower(), field)
+
+    if subrecord in patient_subrecords():
+        lookup = "patient__{}".format(lookup)
+
+    if isinstance(getattr(subrecord, field), ForeignKeyOrFreeText):
+        if value == 'None':
+            value = None
+            lookup = "{}_fk".format(lookup)
+        else:
+            lookup = "{}_fk__name".format(lookup)
+
+    path = (
+        "{0}-{1}: {2}".format(
+            subrecord.get_display_name(),
+            subrecord._get_field_title(field),
+            value
+        )
+    )
+
+    qs = qs.filter(**{lookup: value})
+    return path, qs
+
+
+def get_trend_and_qs_from(get_param, value, qs):
+    # the query string is made up of trend__t__function__field=value
+    split_query = get_param.split("__")
+    field = None
+    if len(split_query) == 4:
+        trend_api_name, _, trend_function, field = split_query
+    else:
+        trend_api_name, _, trend_function = split_query
+
+    trend_function = "{}_query".format(trend_function)
+    trend = Trend.get_trend(trend_api_name)()
+    some_fun = getattr(trend, trend_function)
+    qs = some_fun(qs, trend, field=field)
+    path = "{0}-{1}:{2}".format(
+        trend.get_display_name(),
+        trend_function.replace("_", " "),
+        value
+    )
+    return path, qs
 
 
 class AbstractTrendyFilterView(LoginRequiredMixin, TemplateView):
@@ -40,27 +88,37 @@ class AbstractTrendyFilterView(LoginRequiredMixin, TemplateView):
                 if k == "list":
                     continue
 
-                subrecord = get_subrecord_from_api_name(k.split("__")[0])
-                field = k.split("__")[1]
-                lookup = "{0}__{1}".format(subrecord.__name__.lower(), field)
+                if k.split("__")[1] == "t":
+                    path_part, qs = get_trend_and_qs_from(k, v, qs)
+                else:
+                    path_part, qs = get_path_and_qs_from(k, v, qs)
+                path.append(path_part)
 
-                if subrecord in patient_subrecords():
-                    lookup = "patient__{}".format(lookup)
+                #
+                # subrecord = get_subrecord_from_api_name(k.split("__")[0])
+                # field = k.split("__")[1]
+                #
+                # lookup = "{0}__{1}".format(subrecord.__name__.lower(), field)
+                #
+                # if subrecord in patient_subrecords():
+                #     lookup = "patient__{}".format(lookup)
+                #
+                # if isinstance(getattr(subrecord, field), ForeignKeyOrFreeText):
+                #     if v == 'None':
+                #         v = None
+                #         lookup = "{}_fk".format(lookup)
+                #     else:
+                #         lookup = "{}_fk__name".format(lookup)
+                #
+                # path.append(
+                #     "{0}-{1}: {2}".format(
+                #         subrecord.get_display_name(),
+                #         subrecord._get_field_title(field),
+                #         v
+                #     )
+                # )
 
-                if isinstance(getattr(subrecord, field), ForeignKeyOrFreeText):
-                    if v == 'None':
-                        v = None
-                        lookup = "{}_fk".format(lookup)
-                    else:
-                        lookup = "{}_fk__name".format(lookup)
-
-                path.append(dict(
-                    subrecord=subrecord.get_display_name(),
-                    field=subrecord._get_field_title(field),
-                    field_value=v
-                ))
-
-                qs = qs.filter(**{lookup: v})
+                # qs = qs.filter(**{lookup: v})
 
         return listname, path, qs
 

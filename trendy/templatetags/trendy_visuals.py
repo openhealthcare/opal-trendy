@@ -20,8 +20,7 @@ def run_trend_function(
     args = [
         queryset,
         subrecord_api_name,
-        context["request"].GET,
-        context["user"]
+        context["request"]
     ]
 
     if field:

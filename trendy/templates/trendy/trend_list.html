@@ -20,7 +20,7 @@
           Home
         </a>
         {% for item in path %}
-           <span class="text-success">|</span> <a href="{% createlink forloop.counter %}">{{ item.subrecord }}-{{ item.field }}: {{ item.field_value }}</a>
+           <span class="text-success">|</span> <a href="{% createlink forloop.counter %}">{{ item }}</a>
         {% endfor %}
         > {{ obj_list.count }} episodes
       </h4>
