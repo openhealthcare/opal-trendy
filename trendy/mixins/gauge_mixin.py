@@ -55,7 +55,9 @@ class GaugeMixin(object):
         ))
         return result
 
-    def non_coded_gauge_query(self, episode_queryset, trend, field=None):
+    def non_coded_gauge_query(
+        self, episode_queryset, trend, value=None, field=None
+    ):
         fk_fields = "{0}__{1}_fk".format(trend.subrecord_api_name, field)
         ft_fields = "{0}__{1}_ft".format(trend.subrecord_api_name, field)
         return episode_queryset.filter(**{
@@ -98,7 +100,7 @@ class GaugeMixin(object):
         return result
 
     def missing_subrecord_gauge_query(
-        self, episode_queryset, trend, field=None
+        self, episode_queryset, trend, field=None, value=None
     ):
         related_name = trend.subrecord.__name__.lower()
         key = "num_{}".format(related_name)

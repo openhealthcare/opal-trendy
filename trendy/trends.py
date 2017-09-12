@@ -44,6 +44,24 @@ class DemographicsTrend(Trend):
     subrecord_api_name = "demographics"
     template_name = "trendy/subrecords/demographics_trend.html"
 
+    def age_bar_chart_query(
+        self, episode_queryset, trend, field=None, value=None
+    ):
+        age_group = [int(i.strip()) for i in value.split("-") if i.strip()]
+        today = datetime.date.today()
+        start_dt = today - relativedelta(years=age_group[0])
+        age_group_qs = episode_queryset.filter(
+            patient__demographics__date_of_birth__lte=start_dt
+        )
+
+        if len(age_group) == 2:
+            end_dt = today - relativedelta(years=age_group[1])
+            age_group_qs = age_group_qs.filter(
+                patient__demographics__date_of_birth__gt=end_dt
+            )
+
+        return age_group_qs
+
     def age_bar_chart(
         self,
         episode_queryset,
@@ -95,7 +113,7 @@ class DemographicsTrend(Trend):
         result["graph_vals"] = json.dumps(dict(
             aggregate=aggregate,
             links=bar_link_from_trend(
-                self.get_api_name(), "non_coded_gauge", aggregate, request, field
+                self.get_api_name(), "age_bar_chart", aggregate, request, field
             ),
             subrecord=subrecord_api_name
         ))

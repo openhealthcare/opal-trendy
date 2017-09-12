@@ -20,6 +20,8 @@ These methods are split out between the different mixins.
 # so we pass back, subrecord__t__function__field="value"
 # or subrecord__value__etc
 
+# TODO, links from the axis of the age histogram work
+
 # TODO, I want a graph of episode starts per team
 # TODO, For condition I want, when another condition is selected for it to give
 #       Me the % chance the patient has other conditions

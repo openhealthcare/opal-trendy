@@ -60,7 +60,7 @@ def get_trend_and_qs_from(get_param, value, qs):
     trend_function = "{}_query".format(trend_function)
     trend = Trend.get_trend(trend_api_name)()
     some_fun = getattr(trend, trend_function)
-    qs = some_fun(qs, trend, field=field)
+    qs = some_fun(qs, trend, value=value, field=field)
     path = "{0}-{1}:{2}".format(
         trend.get_display_name(),
         trend_function.replace("_", " "),
