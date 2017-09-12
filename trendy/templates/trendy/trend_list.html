@@ -1,7 +1,5 @@
 {% extends 'trendy/trend_base.html' %}
-
 {% load trendy_utils %}
-
 
 {% block content %}
 <div class="container content-offset" id="app">
@@ -20,7 +18,7 @@
           Home
         </a>
         {% for item in path %}
-           <span class="text-success">|</span> <a href="{% createlink forloop.counter %}">{{ item }}</a>
+           <span class="text-success">|</span> <a href="{% create_link forloop.counter %}">{{ item }}</a>
         {% endfor %}
         > {{ obj_list.count }} episodes
       </h4>

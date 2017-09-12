@@ -8,7 +8,7 @@ register = template.Library()
 
 
 @register.simple_tag(takes_context=True)
-def createlink(context, number):
+def create_link(context, number):
     request = context["request"]
     url = request.get_full_path()
     if request.GET:
@@ -17,6 +17,11 @@ def createlink(context, number):
         sep = "?"
     newurl = sep.join(url.split(sep)[:number])
     return newurl.format(url)
+
+
+@register.filter
+def already_filtered(trend__field, request):
+    return trend__field in request.GET
 
 
 @register.simple_tag(takes_context=True)

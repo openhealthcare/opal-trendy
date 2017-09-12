@@ -17,9 +17,9 @@
     </div>
     <div class="panel-body">
         <h2>
-          <a href="{% createlink 0 %}">{{ listname }}</a>
+          <a href="{% create_link 0 %}">{{ listname }}</a>
           {% for item in path %}
-             <span class="text-success">|</span> <a href="{% createlink forloop.counter %}">{{ item.subrecord }}: {{item.field_value}}</a>
+             <span class="text-success">|</span> <a href="{% create_link forloop.counter %}">{{ item.subrecord }}: {{item.field_value}}</a>
           {% endfor %}
        </h2>
       <div class="panel">

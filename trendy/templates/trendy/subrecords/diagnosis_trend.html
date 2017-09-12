@@ -1,5 +1,7 @@
 {% load forms %}
 {% load trendy_visuals %}
+{% load trendy_utils %}
+
 
 <div class="panel panel-default">
   <div class="panel-heading">
@@ -9,28 +11,34 @@
   </div>
   <div class="panel-body">
     <div class="row">
-      <div class="col-md-6">
-        {% pie_chart "subrecord_break_down" obj_list "diagnosis" field="condition" %}
-      </div>
-      <div class="col-md-3">
-        <div class="row">
-          <div class="col-md-12">
-            {% gauge_trend "non_coded_gauge" obj_list "diagnosis" field="condition" label="With a non coded condition" %}
+      {% if "diagnosis__condition"|already_filtered:request %}
+        <div class="col-md-6">
+          {% pie_chart "subrecord_break_down" obj_list "diagnosis" field="condition" %}
+        </div>
+      {% else %}
+        <div class="col-md-6">
+          {% pie_chart "subrecord_break_down" obj_list "diagnosis" field="condition" %}
+        </div>
+        <div class="col-md-3">
+          <div class="row">
+            <div class="col-md-12">
+              {% gauge_trend "non_coded_gauge" obj_list "diagnosis" field="condition" label="With a non coded condition" %}
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              {% gauge_trend "empty_field_gauge" obj_list "diagnosis" field="condition" label="With an empty condition" %}
+            </div>
           </div>
         </div>
-        <div class="row">
-          <div class="col-md-12">
-            {% gauge_trend "empty_field_gauge" obj_list "diagnosis" field="condition" label="With an empty condition" %}
+        <div class="col-md-3">
+          <div class="row">
+            <div class="col-md-12">
+              {% gauge_trend "missing_subrecord_gauge" obj_list "diagnosis" label="With no diagnosis" %}
+            </div>
           </div>
         </div>
-      </div>
-      <div class="col-md-3">
-        <div class="row">
-          <div class="col-md-12">
-            {% gauge_trend "missing_subrecord_gauge" obj_list "diagnosis" label="With no diagnosis" %}
-          </div>
-        </div>
-      </div>
+      {% endif %}
     </div>
   </div>
 </div>

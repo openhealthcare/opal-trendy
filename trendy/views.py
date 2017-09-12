@@ -94,32 +94,6 @@ class AbstractTrendyFilterView(LoginRequiredMixin, TemplateView):
                     path_part, qs = get_path_and_qs_from(k, v, qs)
                 path.append(path_part)
 
-                #
-                # subrecord = get_subrecord_from_api_name(k.split("__")[0])
-                # field = k.split("__")[1]
-                #
-                # lookup = "{0}__{1}".format(subrecord.__name__.lower(), field)
-                #
-                # if subrecord in patient_subrecords():
-                #     lookup = "patient__{}".format(lookup)
-                #
-                # if isinstance(getattr(subrecord, field), ForeignKeyOrFreeText):
-                #     if v == 'None':
-                #         v = None
-                #         lookup = "{}_fk".format(lookup)
-                #     else:
-                #         lookup = "{}_fk__name".format(lookup)
-                #
-                # path.append(
-                #     "{0}-{1}: {2}".format(
-                #         subrecord.get_display_name(),
-                #         subrecord._get_field_title(field),
-                #         v
-                #     )
-                # )
-
-                # qs = qs.filter(**{lookup: v})
-
         return listname, path, qs
 
     def get_context_data(self, **kwargs):
