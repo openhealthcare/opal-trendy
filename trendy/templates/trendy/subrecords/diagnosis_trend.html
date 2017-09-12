@@ -13,16 +13,16 @@
     <div class="row">
       {% if "diagnosis__condition"|already_filtered:request %}
         <div class="col-md-6">
-          {% pie_chart "subrecord_break_down" obj_list "diagnosis" field="condition" %}
+          {% pie_chart "fkft_query" obj_list "diagnosis" field="condition" %}
         </div>
       {% else %}
         <div class="col-md-6">
-          {% pie_chart "subrecord_break_down" obj_list "diagnosis" field="condition" %}
+          {% pie_chart "fkft_query" obj_list "diagnosis" field="condition" %}
         </div>
         <div class="col-md-3">
           <div class="row">
             <div class="col-md-12">
-              {% gauge_trend "non_coded_gauge" obj_list "diagnosis" field="condition" label="With a non coded condition" %}
+              {% gauge_trend "non_coded_fk_and_ft_gauge" obj_list "diagnosis" field="condition" label="With a non coded condition" %}
             </div>
           </div>
           <div class="row">
@@ -34,7 +34,7 @@
         <div class="col-md-3">
           <div class="row">
             <div class="col-md-12">
-              {% gauge_trend "missing_subrecord_gauge" obj_list "diagnosis" label="With no diagnosis" %}
+              {% gauge_trend "missing_gauge" obj_list "diagnosis" label="With no diagnosis" %}
             </div>
           </div>
         </div>

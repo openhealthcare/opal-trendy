@@ -22,8 +22,8 @@
         {% endfor %}
         > {{ obj_list.count }} episodes
       </h4>
-      {% include "demographics"|trend_template %}
-      {% include "diagnosis"|trend_template %}
+      {% include "trendy/subrecords/demographics_trend.html" %}
+      {% include "trendy/subrecords/diagnosis_trend.html" %}
     </div>
   </div>
 </div>

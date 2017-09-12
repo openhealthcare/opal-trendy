@@ -1,9 +1,6 @@
 from django import template
 import json
 from opal.core.views import OpalSerializer
-from trendy.trends import Trend
-
-
 register = template.Library()
 
 
@@ -42,14 +39,3 @@ def append_to_request(context, api_name, field, value):
 @register.filter
 def as_json(subrecord, request):
     return json.dumps([subrecord.to_json(request.user)], cls=OpalSerializer)
-
-
-def trend_template(subrecord_api_name):
-    trend = Trend.get_trend(subrecord_api_name)
-
-    if trend is None:
-        return Trend.template_name
-    else:
-        return trend.template_name
-
-register.filter('trend_template', trend_template)

@@ -2,7 +2,7 @@ from django.views.generic import TemplateView
 from opal.core.views import LoginRequiredMixin
 from opal import models
 from opal.core.fields import ForeignKeyOrFreeText
-from trendy.trends import Trend
+from trendy.trends import Trendy
 # from trendy.trends import SubrecordTrend
 from opal.core import patient_lists
 from opal.core.subrecords import (
@@ -88,11 +88,9 @@ class AbstractTrendyFilterView(LoginRequiredMixin, TemplateView):
                 if k == "list":
                     continue
 
-                if k.split("__")[1] == "t":
-                    path_part, qs = get_trend_and_qs_from(k, v, qs)
-                else:
-                    path_part, qs = get_path_and_qs_from(k, v, qs)
-                path.append(path_part)
+                trend = Trendy.get_from_get_param(request, k)
+                qs = trend.query(v, qs)
+                path.append(trend.get_description(v))
 
         return listname, path, qs
 

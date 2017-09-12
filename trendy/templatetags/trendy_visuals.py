@@ -1,33 +1,7 @@
 from django import template
-from trendy.trends import Trend
-from opal.core import subrecords
-
+from trendy.trends import Trendy
 
 register = template.Library()
-
-
-def run_trend_function(
-    context, function, queryset, subrecord_api_name, label=None, field=None
-):
-    trend = Trend.get_trend(subrecord_api_name)()
-    if not label:
-        if not field:
-            raise "Unable to calculate the label without a field"
-
-        subrecord = subrecords.get_subrecord_from_api_name(subrecord_api_name)
-        label = subrecord._get_field_title(field)
-
-    args = [
-        queryset,
-        subrecord_api_name,
-        context["request"]
-    ]
-
-    if field:
-        args.append(field)
-    result = getattr(trend, function)(*args)
-    result["label"] = label
-    return result
 
 
 @register.inclusion_tag(
@@ -36,9 +10,12 @@ def run_trend_function(
 def gauge_trend(
     context, function, queryset, subrecord_api_name, label=None, field=None
 ):
-    context.update(run_trend_function(
-        context, function, queryset, subrecord_api_name, label, field=field
-    ))
+    trend_cls = Trendy.get(function)
+    trend = trend_cls(
+        subrecord_api_name, field_name=field, request=context["request"]
+    )
+    context.update(trend.get_graph_data(queryset))
+    context["label"] = label
     return context
 
 
@@ -48,10 +25,12 @@ def gauge_trend(
 def pie_chart(
         context, function, queryset, subrecord_api_name, field=None, label=None
 ):
-
-    context.update(run_trend_function(
-        context, function, queryset, subrecord_api_name, label, field=field
-    ))
+    trend_cls = Trendy.get(function)
+    trend = trend_cls(
+        subrecord_api_name, field_name=field, request=context["request"]
+    )
+    context.update(trend.get_graph_data(queryset))
+    context["label"] = label
     return context
 
 
@@ -62,30 +41,10 @@ def bar_chart(
         context, function, queryset, subrecord_api_name, field=None, label=None
 ):
 
-    context.update(run_trend_function(
-        context, function, queryset, subrecord_api_name, label, field=field
-    ))
+    trend_cls = Trendy.get(function)
+    trend = trend_cls(
+        subrecord_api_name, field_name=field, request=context["request"]
+    )
+    context.update(trend.get_graph_data(queryset))
+    context["label"] = label
     return context
-
-
-
-# @register.inclusion_tag('templatetags/trendy/table.html', takes_context=True)
-# def trendy_table(context, queryset, subrecord_api_name, field_name):
-#     """
-#         returns subrecord api name, field, and an list of dictionaries
-#
-#         in each dictionary,
-#             field_value = name of the field
-#             amount = the amount
-#             link = whether this should be a link onwards
-#         the list is ordered by -amount
-#     """
-#     result = aggregate_field(queryset, subrecord_api_name, field_name)
-#     # result.append(dict(field="Total", amount=queryset.count(), link=False))
-#     context["rows"] = [
-#         dict(field_value=k, amount=v, link=True) for k, v in result
-#     ]
-#     context["rows"].sort(key=lambda x: -x['amount'])
-#     context["field"] = field_name
-#     context["subrecord"] = subrecord_api_name
-#     return context
