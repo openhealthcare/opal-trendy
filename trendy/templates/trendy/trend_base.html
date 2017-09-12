@@ -92,7 +92,9 @@
 
     <script type="text/x-template" id="pie-chart-template">
       <div class="row">
-        <div class="col-md-6" style="height: 300px;" v-pie="graphVals.aggregate"></div>
+        <a v-bind:href="graphVals.links[currentLink]">
+          <div class="col-md-6" style="height: 300px;" v-pie="graphVals.aggregate"></div>
+        </a>
         <div class="col-md-6">
           <ul>
             <li v-for="row in graphVals.aggregate">
@@ -124,7 +126,9 @@
 
     <script type="text/x-template" id="bar-chart-template">
       <div>
-        <div style="height: 300px;" v-bar="graphVals"></div>
+        <a v-bind:href="graphVals.links[currentLink]">
+          <div style="height: 300px;" v-bar="graphVals"></div>
+        </a>
       </div>
     </script>
 
@@ -150,7 +154,8 @@
           },
           data: function(){
             return {
-              colours: null
+              colours: null,
+              currentLink: null,
             };
           }
         });
@@ -164,8 +169,12 @@
                 columns: binding.value,
                 type : 'pie',
                 onclick: function (d, i) { console.log("onclick", d, i); },
-                onmouseover: function (d, i) { console.log("onmouseover", d, i); },
-                onmouseout: function (d, i) { console.log("onmouseout", d, i); }
+                onmouseover: function (d, i) {
+                  vnode.context.currentLink = d.id;
+                },
+                onmouseout: function (d, i) {
+                  vnode.context.currentLink = null;
+                }
               },
               legend: {
                 show: false
@@ -209,6 +218,11 @@
           props: ['graphVals'],
           template: "#bar-chart-template",
           delimiters: ['[[', ']]'],
+          data: function(){
+            return {
+              currentLink: null,
+            };
+          }
         });
 
         Vue.directive('bar', {
@@ -221,8 +235,13 @@
                 columns: binding.value.aggregate,
                 type : 'bar',
                 onclick: function (d, i) { console.log("onclick", d, i); },
-                onmouseover: function (d, i) { console.log("onmouseover", d, i); },
-                onmouseout: function (d, i) { console.log("onmouseout", d, i); }
+                onmouseover: function (d, i) {
+                  var x = binding.value.aggregate;
+                  vnode.context.currentLink = binding.value.aggregate[0][d.index + 1];
+                },
+                onmouseout: function (d, i) {
+                  vnode.context.currentLink = null;
+                }
               },
               legend: {
                 show: false
