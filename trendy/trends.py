@@ -11,6 +11,16 @@ from trendy.utils import (
 import json
 
 
+def date_to_string(date):
+    dt = datetime.datetime(date.year, date.month, date.day)
+    return dt.strftime("%d/%m/%Y")
+
+
+def string_to_date(date_str):
+    dt = datetime.datetime.strptime(date_str, "%d/%m/%Y")
+    return dt.date()
+
+
 class Trendy(discoverable.DiscoverableFeature):
     module_name = "trends"
 
@@ -157,7 +167,70 @@ class FTFKQueryPieChart(Trendy, FKFTMixin):
 
 
 class EpisodeAdmissionBarChart(Trendy):
-    display_name "Episode Admission"
+    display_name = "EpisodeAdmissions"
+
+    def get_description(self, value=None):
+        return "Episode admissions for {}".format(value)
+
+    def filter_by_quarter(self, episode_queryset, quarter):
+        start_dt = quarter[0]
+        admissions_qs = episode_queryset.filter(start__gte=start_dt)
+
+        if len(quarter) == 2:
+            end_dt = quarter[0]
+            admissions_qs = admissions_qs.filter(start__lt=end_dt)
+        return admissions_qs
+
+    def query(self, value, episode_queryset):
+        v = [string_to_date(i.strip()) for i in value.split("-")]
+        return self.filter_by_quarter(episode_queryset, v)
+
+    def get_graph_data(
+        self,
+        episode_queryset,
+    ):
+        result = {}
+
+        quarters = [
+            [datetime.date(2017, 1, 1), datetime.date(2017, 4, 1)],
+            [datetime.date(2017, 4, 1), datetime.date(2017, 4, 1)],
+            [datetime.date(2017, 7, 1)]
+        ]
+
+        admissions = []
+
+        for quarter in quarters:
+            admissions.append(
+                self.filter_by_quarter(episode_queryset, quarter).count()
+            )
+
+        admissions.insert(0, "Admissions")
+        x_axis = ["x"]
+
+        for quarter in quarters:
+            if len(quarter) == 1:
+                x_axis.append(
+                    "{} +".format(date_to_string(quarter[0]))
+                )
+            else:
+                x_axis.append(
+                    "{0} - {1}".format(
+                        date_to_string(quarter[0]),
+                        date_to_string(quarter[1])
+                    )
+                )
+        aggregate = [x_axis, admissions]
+        links = {}
+
+        for i in aggregate[0][1:]:
+            links[i] = self.to_link(i)
+
+        result["graph_vals"] = json.dumps(dict(
+            aggregate=aggregate,
+            links=links,
+            subrecord=self.subrecord_api_name
+        ))
+        return result
 
 
 class AgeBarChart(Trendy):
@@ -253,7 +326,7 @@ class EmptyFieldGauge(Trendy, FKFTMixin):
     def get_description(self, value=None):
         return "{0} has not been filled in".format(self.field_name)
 
-    def query(self, episode_queryset):
+    def query(self, value, episode_queryset):
         return episode_queryset.filter(**{
             self.relative_fk_field: None,
             self.relative_ft_field: ""
@@ -297,8 +370,14 @@ class NonCodedFkAndFTGauge(Trendy, FKFTMixin):
     """
     display_name = "NonCodedFkAndFTGauge"
 
+    def get_description(self, value=None):
+        return "Number of {0} with a non-coded {1}".format(
+            self.subrecord.get_display_name(),
+            self.field_name
+        )
+
     def query(
-        self, episode_queryset
+        self, value, episode_queryset
     ):
         return episode_queryset.filter(**{
             self.relative_fk_field: None,
@@ -342,8 +421,13 @@ class NonCodedFkAndFTGauge(Trendy, FKFTMixin):
 class MissingGauge(Trendy):
     display_name = "MissingGauge"
 
+    def get_description(self, value=None):
+        return "Number of episodes without a {}".format(
+            self.subrecord.get_display_name(),
+        )
+
     def query(
-        self, episode_queryset
+        self, value, episode_queryset
     ):
         related_name = self.subrecord.__name__.lower()
         key = "num_{}".format(related_name)

@@ -1,5 +1,6 @@
 {% load forms %}
 {% load trendy_visuals %}
+{% load trendy_utils %}
 
 <div class="panel panel-default">
   <div class="panel-heading">
@@ -9,17 +10,23 @@
   </div>
   <div class="panel-body">
     <div class="row">
-      <div class="col-md-6">
-        {% pie_chart "fkft_query" obj_list "demographics" field="sex" %}
-      </div>
-      <div class="col-md-6">
-        {% pie_chart "fkft_query" obj_list "demographics" field="ethnicity" %}
-      </div>
+      {% if not "demographics__fkft_query__sex"|already_filtered:request %}
+        <div class="col-md-6">
+          {% pie_chart "fkft_query" obj_list "demographics" field="sex" %}
+        </div>
+      {% endif %}
+      {% if not "demographics__fkft_query__ethnicity"|already_filtered:request %}
+        <div class="col-md-6">
+          {% pie_chart "fkft_query" obj_list "demographics" field="ethnicity" %}
+        </div>
+      {% endif %}
     </div>
-    <div class="row">
-      <div class="col-md-12">
-        {% bar_chart "age" obj_list "demographics" label="Age" %}
+    {% if not "demographics__age"|already_filtered:request %}
+      <div class="row">
+        <div class="col-md-12">
+            {% bar_chart "age" obj_list "demographics" label="Age" %}
+        </div>
       </div>
-    </div>
+    {% endif %}
   </div>
 </div>
