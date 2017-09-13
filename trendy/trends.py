@@ -80,6 +80,18 @@ class Trendy(discoverable.DiscoverableFeature):
             self.subrecord_api_name
         )
 
+    def get_related_name(self, field=None):
+        """ The db relationship between it an episode
+            e.g. for Allergy it would be patient__allergy
+        """
+        related_name = self.subrecord.__name__.lower()
+        if field:
+            related_name = "{0}__{1}".format(related_name, field)
+        if self.is_patient_subrecord:
+            return "patient__{0}".format(related_name)
+        else:
+            return related_name
+
     @cached_property
     def is_patient_subrecord(self):
         return self.subrecord in subrecords.patient_subrecords()
@@ -92,23 +104,11 @@ class Trendy(discoverable.DiscoverableFeature):
 class FKFTMixin(object):
     @property
     def relative_fk_field(self):
-        fk_field = "{0}__{1}_fk".format(
-            self.subrecord_api_name, self.field_name
-        )
-        if self.is_patient_subrecord:
-            fk_field = "patient__{}".format(fk_field)
-
-        return fk_field
+        return self.get_related_name("{}_fk".format(self.field_name))
 
     @property
     def relative_ft_field(self):
-        ft_field = "{0}__{1}_ft".format(
-            self.subrecord_api_name, self.field_name
-        )
-        if self.is_patient_subrecord:
-            ft_field = "patient__{}".format(ft_field)
-
-        return ft_field
+        return self.get_related_name("{}_ft".format(self.field_name))
 
     @property
     def ft_field(self):
@@ -379,11 +379,16 @@ class NonCodedFkAndFTGauge(Trendy, FKFTMixin):
     def query(
         self, value, episode_queryset
     ):
-        return episode_queryset.filter(**{
-            self.relative_fk_field: None,
-        }).exclude(**{
-            self.relative_ft_field: ''
-        })
+        non_coded = self.subrecord.objects.filter(
+            **{self.fk_field: None}
+        ).exclude(
+            **{self.ft_field: ''}
+        )
+        self.subrecord.__name__.lower()
+        query_arg = "{}__in".format(self.get_related_name())
+        return episode_queryset.filter(
+            **{query_arg: non_coded}
+        )
 
     def get_graph_data(
             self, episode_queryset
