@@ -1,4 +1,5 @@
 from django import template
+from opal.core.fields import ForeignKeyOrFreeText
 import json
 from opal.core.views import OpalSerializer
 register = template.Library()
@@ -39,3 +40,18 @@ def append_to_request(context, api_name, field, value):
 @register.filter
 def as_json(subrecord, request):
     return json.dumps([subrecord.to_json(request.user)], cls=OpalSerializer)
+
+
+@register.inclusion_tag(
+    'templatetags/trendy/default_trend.html', takes_context=True
+)
+def trend_panel(
+        context, subrecord
+):
+    fk_ft_fields = []
+    fieldnames = [f.attname for f in subrecord.__class__._meta.fields]
+    fk_ft_fields = [f[:-6] for f in fieldnames if f.endswith('_fk_id')]
+    context["subrecord"] = subrecord
+    context["is_singleton"] = subrecord._is_singleton
+    context["fk_ft_fields"] = fk_ft_fields
+    return context

@@ -15,7 +15,11 @@ def gauge_trend(
         subrecord_api_name, field_name=field, request=context["request"]
     )
     context.update(trend.get_graph_data(queryset))
-    context["label"] = label
+    if label:
+        context["label"] = label
+    else:
+        context["label"] = trend.label
+
     return context
 
 
@@ -30,7 +34,10 @@ def pie_chart(
         subrecord_api_name, field_name=field, request=context["request"]
     )
     context.update(trend.get_graph_data(queryset))
-    context["label"] = label
+    if label:
+        context["label"] = label
+    else:
+        context["label"] = trend.label
     return context
 
 
@@ -46,5 +53,9 @@ def bar_chart(
         subrecord_api_name, field_name=field, request=context["request"]
     )
     context.update(trend.get_graph_data(queryset))
-    context["label"] = label
+    if label:
+        context["label"] = label
+    else:
+        context["label"] = trend.label
+
     return context

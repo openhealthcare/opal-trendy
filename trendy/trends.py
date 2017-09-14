@@ -1,4 +1,5 @@
 import datetime
+from collections import Counter
 from django.utils.functional import cached_property
 from opal.core.fields import ForeignKeyOrFreeText
 from opal.core import discoverable
@@ -38,6 +39,10 @@ class Trendy(discoverable.DiscoverableFeature):
     def query(self, value, episode_queryset):
         raise NotImplementedError("query needs to be implemented")
 
+    @property
+    def label(self):
+        raise NotImplementedError("label needs to be implemented")
+
     @classmethod
     def get_from_get_param(cls, request, some_key):
         splitted = some_key.split("__")
@@ -57,21 +62,25 @@ class Trendy(discoverable.DiscoverableFeature):
         else:
             return "{0}?{1}".format(full_path, link)
 
-    def to_link(self, value):
-        link = None
+    def to_link_key(self):
         if self.field_name:
-            link = "{0}__{1}__{2}={3}".format(
+            link_key = "{0}__{1}__{2}".format(
                 self.subrecord_api_name,
                 self.__class__.get_slug(),
                 self.field_name,
-                value
             )
         else:
-            link = "{0}__{1}={2}".format(
+            link_key = "{0}__{1}".format(
                 self.subrecord_api_name,
                 self.__class__.get_slug(),
-                value
             )
+
+        return link_key
+
+    def to_link(self, value):
+        link = "{0}={1}".format(
+            self.to_link_key(), value
+        )
         return self.append_to_request(link)
 
     @cached_property
@@ -79,6 +88,13 @@ class Trendy(discoverable.DiscoverableFeature):
         return subrecords.get_subrecord_from_api_name(
             self.subrecord_api_name
         )
+
+    @property
+    def field_display_name(self):
+        if not self.field_name:
+            raise ValueError('The trend does not have a field')
+        else:
+            return self.subrecord._get_field_title(self.field_name)
 
     def get_related_name(self, field=None):
         """ The db relationship between it an episode
@@ -119,13 +135,82 @@ class FKFTMixin(object):
         return "{0}_fk".format(self.field_name)
 
 
+class SubrecordCountPieChart(Trendy):
+    """
+        supplies a pie chart of the count of this subrecord
+        ie. 10% of episodes have 2 etc
+    """
+    display_name = "Subrecord count"
+    slug = "subrecord_count"
+
+    @property
+    def label(self):
+        return "Number Of {} Per Episode".format(
+            self.subrecord.get_display_name()
+        )
+
+    @property
+    def count_field(self):
+        return "{}_count".format(self.get_related_name())
+
+    def annotate_queryset(self, episode_queryset):
+        # TODO we need to check how this works with patient__
+        return episode_queryset.annotate(**{
+            self.count_field: Count(self.get_related_name())
+        })
+
+    def query(self, value, episode_queryset):
+        annotated = self.annotate_queryset(episode_queryset)
+        return annotated.filter(**{self.count_field: value})
+
+    def get_graph_data(self, episode_queryset):
+        qs = self.annotate_queryset(episode_queryset)
+        counter = Counter(qs.values_list(self.count_field, flat=True))
+        aggregate = [[k, v] for k, v in counter.items()]
+        links = {}
+        for i in aggregate:
+            links[i[0]] = self.to_link(i[0])
+        result = {}
+        result["graph_vals"] = json.dumps(dict(
+            aggregate=aggregate,
+            links=links
+        ))
+        return result
+
+    def get_description(self, value=None):
+        description = "Episodes with {0} {1}".format(
+            value, self.subrecord.get_display_name()
+        )
+        if not value == '1':
+            description = "{}s".format(description)
+        return description
+
+
 class FTFKQueryPieChart(Trendy, FKFTMixin):
     """
         supplies a pie chart of the aggregated values of fk ft
     """
     display_name = "FKFTQuery"
 
+    def label(self):
+        link_key = self.to_link_key()
+        previous_filtered = self.request.GET.getlist(link_key)
+        if previous_filtered:
+            label = "% Breakdown of {0} where the episode has a {0} of".format(
+                self.field_display_name
+            )
+            if len(previous_filtered) == 1:
+                conjunction = previous_filtered[0]
+            else:
+                conjunction = " and ".join(
+                    [", ".join(previous_filtered[:-1]), previous_filtered[-1]]
+                )
+            return "{0} {1}".format(label, conjunction)
+        else:
+            return "% Breakdown Of {}".format(self.field_display_name)
+
     def query(self, value, episode_queryset):
+
         field = self.get_field()
         if not isinstance(field, ForeignKeyOrFreeText):
             raise ValueError("this trend expects a foreign key or free text")
@@ -140,13 +225,24 @@ class FTFKQueryPieChart(Trendy, FKFTMixin):
 
     def get_graph_data(self, episode_queryset):
         qs = get_subrecord_qs_from_episode_qs(self.subrecord, episode_queryset)
+        link_key = self.to_link_key()
+        previous_filtered = self.request.GET.getlist(link_key)
+
+        for previous in previous_filtered:
+            qs = qs.exclude(**{
+                "{}_fk__name".format(self.field_name): previous
+            })
 
         field = self.get_field()
 
         if isinstance(field, ForeignKeyOrFreeText):
-            aggregate = aggregate_free_text_or_foreign_key(
-                qs, self.subrecord, self.field_name
-            )
+            field_name = "{}_fk__name".format(self.field_name)
+            annotated = qs.values(field_name).annotate(Count('id'))
+            aggregate = []
+            for key_connection in annotated:
+                total_count = key_connection.pop('id__count')
+                key = key_connection.values()[0]
+                aggregate.append([str(key), total_count])
         else:
             raise NotImplementedError(
                 'at the moment we only support free text or fk'
@@ -168,6 +264,7 @@ class FTFKQueryPieChart(Trendy, FKFTMixin):
 
 class EpisodeAdmissionBarChart(Trendy):
     display_name = "EpisodeAdmissions"
+    label = "Episode Admission"
 
     def get_description(self, value=None):
         return "Episode admissions for {}".format(value)
@@ -238,6 +335,7 @@ class AgeBarChart(Trendy):
         supplies a bar chart of the demographics ages
     """
     display_name = "Age"
+    label = "Patient Age"
 
     def get_description(self, value=None):
         return "Age range between {}".format(value)

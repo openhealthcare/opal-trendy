@@ -17,29 +17,14 @@ a method name on trend that returns a function for these.
 
 These methods are split out between the different mixins.
 
-# so we pass back, subrecord__t__function__field="value"
-# or subrecord__value__etc
-
-# TODO, For condition I want, when another condition is selected for it to give
-#       Me the % chance the patient has other conditions
-
-# TODO, I probably want a start page I'm just not sure how I want this...
-#       its not really necessary for RFH and only necessary for UCH
 
 # TODO, I want a default subrecord that gives me an intelligent default
-What does that look like
-for singletons, give me something like ethnicity
-ie a pie chart of the ethnicity, all time, and a pie chart of this quarter
-maybe the most common ft and free text,
-the amount that's not entered
-the amount that's ft and fk
+check how the count of number of subrecords works with patient subrecords
 
+# TODO I want episode detail
+I want episode admissions for the last quaters
+I want mean episode length, I want lower quaterile, upper quartile per quarter
 
-for singletons I want the number of coded jobbies
-if there's
-
-
-
-for non singletons
-a pie chart of this quarter, a pie chart of the amount this quarter
-maybe the most common ft and free text, the amount that's not entered
+# TODO I want a default view so that I can extend and implement my own views
+I want to be able to register my own trendy views
+I want to be able to add a prefix
