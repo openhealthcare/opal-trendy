@@ -7,7 +7,8 @@ from trendy import views
 
 urlpatterns = patterns(
     '',
-    url('^trendy/list$', views.TrendyList.as_view(), name="trendy_home"),
+    url('^trendy$', views.TrendyList.as_view(), name="trendy_home"),
+    url('^trendy/(?P<list>[0-9a-z_\-]+/?)$', views.TrendyPatientList.as_view(), name="trendy_patient_list"),
     # url('^trendy/$', views.TrendyView.as_view(), name="trends"),
     # url('^/trend_subrecord_loader/$', views.TrendyLoader.as_view(), name="trends"),
 )

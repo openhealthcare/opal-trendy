@@ -6,9 +6,7 @@ from opal.core import discoverable
 from opal.core import subrecords
 from dateutil.relativedelta import relativedelta
 from django.db.models import Count
-from trendy.utils import (
-    get_subrecord_qs_from_episode_qs, aggregate_free_text_or_foreign_key
-)
+from trendy.utils import get_subrecord_qs_from_episode_qs
 import json
 
 
@@ -263,8 +261,11 @@ class FTFKQueryPieChart(Trendy, FKFTMixin):
 
 
 class EpisodeAdmissionBarChart(Trendy):
+    """
+        Provides a bar chart of admissions by quarter
+    """
     display_name = "EpisodeAdmissions"
-    label = "Episode Admission"
+    label = "Episode Admissions"
 
     def get_description(self, value=None):
         return "Episode admissions for {}".format(value)

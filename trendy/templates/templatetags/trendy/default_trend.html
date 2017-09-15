@@ -10,26 +10,22 @@
     </h3>
   </div>
   <div class="panel-body">
-    {% if is_singleton %}
-      {% for field in fk_ft_fields %}
-        {% if forloop.first %}<div class="row">{% endif %}
-          <div class="col-md-6">
-            {% pie_chart "fkft_query" obj_list subrecord.get_api_name field=field %}
-          </div>
-        {% if forloop.counter|divisibleby:2 %}</div><div class="row">{% endif %}
-        {% if forloop.last %}</div>{% endif %}
-      {% endfor %}
-    {% else %}
-      {% for field in fk_ft_fields %}
-        <div class="row">
-          <div class="col-md-6">
-            {% pie_chart "fkft_query" obj_list subrecord.get_api_name field=field %}
-          </div>
-          <div class="col-md-6">
-            {% pie_chart "subrecord_count" obj_list subrecord.get_api_name %}
-          </div>
+    {% for field in fk_ft_fields %}
+      {% if forloop.first %}<div class="row">{% endif %}
+        <div class="col-md-6">
+          {% pie_chart "fkft_query" obj_list subrecord.get_api_name field=field %}
         </div>
-      {% endfor %}
-    {% endif %}
+        {% if not is_singleton %}
+          {% if forloop.last %}
+            <div class="col-md-6">
+              {% pie_chart "subrecord_count" obj_list subrecord.get_api_name %}
+            </div>
+          {% endif %}
+        {% endif %}
+      {% if forloop.counter|divisibleby:2 %}
+        </div><div class="row">
+      {% endif %}
+      {% if forloop.last %}</div>{% endif %}
+    {% endfor %}
   </div>
 </div>

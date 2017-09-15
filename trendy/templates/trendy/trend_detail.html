@@ -1,12 +1,9 @@
 {% extends 'trendy/trend_base.html' %}
-
 {% load trendy_utils %}
-{% load forms %}
 
 {% block content %}
-<div class="container">
+<div class="container content-offset" id="app">
   <div class="panel panel-primary">
-    <!-- Default panel contents -->
     <div class="panel-heading">
       <h2>
         <a href="/trendy/list">
@@ -16,52 +13,23 @@
       </h2>
     </div>
     <div class="panel-body">
-        <h2>
-          <a href="{% create_link 0 %}">{{ listname }}</a>
-          {% for item in path %}
-             <span class="text-success">|</span> <a href="{% create_link forloop.counter %}">{{ item.subrecord }}: {{item.field_value}}</a>
-          {% endfor %}
-       </h2>
-      <div class="panel">
-      <div class="panel-header">
-            {% for subrecord_table in obj.subrecords %}
-
-          <h3>{% if subrecord_table.subrecord.get_icon %}
-                {% icon subrecord_table.subrecord.get_icon %}
-              {% endif %}
-
-              {{ subrecord_table.subrecord.get_display_name }}</h3>
-              <table class="table table-hover">
-                <thead>
-                  <tr>
-                  <th style="width: 50%">Item</th><th style="width: 50%">Number</th>
-                  </tr>
-                </thead>
-                    {% for key,value in subrecord_table.popular.items %}
-                      {% if key == 'all' %}
-                        <tr> <td>Total</td> <td> {{ value.total }} </tr>
-                      {% else %}
-                        <tr>
-                          <td>
-                            {% in_request subrecord_table key as selected_tag %}
-                            {% if selected_tag %}
-                              <div class="text-success"><strong>{{ key }}</strong></div>
-                            {% else %}
-                              <a href="{% append_to_request subrecord_table.subrecord.get_api_name subrecord_table.field key %}">{{ key }}</a>
-                            {% endif %}
-                        </td>
-                        <td>{{ value.total }} ({{ value.total|as_percentage_of:subrecord_table.popular.all.total }})</td></tr>
-                      {% endif %}
-                    {% endfor %}
-              </table>
-            {% endfor %}
-      </div>
-
-      </div>
-
-
-
+      <h4>
+        <a href="{% url 'trendy_home' %}">
+          Home |
+        </a>
+        {% if title %}
+          <a href="{{ title_url }}">{{ title }}</a> |
+        {% endif %}
+        {% for item in path %}
+           <span class="text-success">|</span> <a href="{% create_link forloop.counter %}">{{ item }}</a>
+        {% endfor %}
+        > {{ obj_list.count }} episodes
+      </h4>
+      {% include "trendy/subrecords/episode_trend.html" %}
+      {% include "trendy/subrecords/demographics_trend.html" %}
+      {% trend_panel models.Diagnosis %}
+      {% trend_panel models.Antimicrobial %}
     </div>
   </div>
 </div>
-{% endblock content %}
+{% endblock %}

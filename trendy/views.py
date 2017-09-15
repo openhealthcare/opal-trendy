@@ -1,4 +1,5 @@
 from django.views.generic import TemplateView
+from django.core.urlresolvers import reverse
 from opal.core.views import LoginRequiredMixin
 from opal import models
 from opal.core.fields import ForeignKeyOrFreeText
@@ -70,6 +71,7 @@ def get_trend_and_qs_from(get_param, value, qs):
 
 
 class AbstractTrendyFilterView(LoginRequiredMixin, TemplateView):
+    template_name = "trendy/trend_detail.html"
 
     def get_episodes_from_url(self, request):
         path = []
@@ -94,7 +96,7 @@ class AbstractTrendyFilterView(LoginRequiredMixin, TemplateView):
 
         return listname, path, qs
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, *args, **kwargs):
         listname, path, qs = self.get_episodes_from_url(self.request)
         context = {}
         context["listname"] = listname
@@ -102,14 +104,43 @@ class AbstractTrendyFilterView(LoginRequiredMixin, TemplateView):
         context["obj_list"] = qs
         return context
 
+teams = dict(
+    opat="OPAT",
+    walkin="Walkin",
+    id_inpatients="ID Inpatients"
+)
 
-class TrendyEpisodeView(AbstractTrendyFilterView):
-    template_name = "trendy/trend_episodes.html"
+
+class TrendyPatientList(AbstractTrendyFilterView):
+    template_name = "trendy/trend_detail.html"
+
+    def get_context_data(self, *args, **kwargs):
+        ctx = super(TrendyPatientList, self).get_context_data(*args, **kwargs)
+        ctx["obj_list"] = ctx["obj_list"].filter(
+            tagging__value=self.kwargs["list"]
+        )
+        ctx["title"] = teams[self.kwargs["list"]]
+        ctx["title_url"] = reverse(
+            "trendy_patient_list", kwargs={"list": self.kwargs["list"]}
+        )
+
+        return ctx
 
 
-class TrendyList(AbstractTrendyFilterView):
+class TrendyList(TemplateView):
     template_name = "trendy/trend_list.html"
 
+    def get_context_data(self, *args, **kwargs):
 
-class TrendyView(AbstractTrendyFilterView):
-    template_name = "trendy/trend_detail.html"
+        ctx = super(TrendyList, self).get_context_data(*args, **kwargs)
+        ctx["lists"] = []
+        for k, v in teams.items():
+            ctx["lists"].append(dict(
+                display_name=v,
+                slug=k,
+                episode_count=Episode.objects.filter(
+                    tagging__value=k
+                ).count()
+            ))
+
+        return ctx

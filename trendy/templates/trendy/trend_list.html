@@ -13,18 +13,22 @@
       </h2>
     </div>
     <div class="panel-body">
-      <h4>
-        <a href="{% url 'trendy_home' %}">
-          Home
-        </a>
-        {% for item in path %}
-           <span class="text-success">|</span> <a href="{% create_link forloop.counter %}">{{ item }}</a>
-        {% endfor %}
-        > {{ obj_list.count }} episodes
-      </h4>
-      {% include "trendy/subrecords/episode_trend.html" %}
-      {% include "trendy/subrecords/demographics_trend.html" %}
-      {% trend_panel models.Diagnosis %}
+      <div class="row">
+        <div class="col-md-12">
+          <h4>Patient Lists</h4>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-4 col-md-push-4">
+          <div class="list-group">
+            {% for list in lists %}
+              <a href="{% url 'trendy_patient_list' list=list.slug %}" class="list-group-item">
+                {{ list.display_name }} {{ list.episode_count }}
+              </a>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>

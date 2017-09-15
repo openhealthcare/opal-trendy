@@ -118,190 +118,191 @@
     {% endblock %}
     <div id="trendy-container">
       {% block content %}
-        <div class="outer-container"></div>
       {% endblock %}
     </div>
 
-    <script type="text/x-template" id="pie-chart-template">
-      <div class="row">
-        <a v-bind:href="graphVals.links[currentLink]">
-          <div class="col-md-6" style="height: 300px;" v-pie="graphVals.aggregate"></div>
-        </a>
-        <div class="col-md-6">
-          <ul>
-            <li v-for="row in graphVals.aggregate">
-              <div>
-                <a v-bind:href="graphVals.links[row[0]]">
-                  <span v-if="colours">
-                    <svg width="10" height="10">
-                      <rect width="10" height="10" v-bind:style='{fill: colours[row[0]]}' style="pointer-events: none;"></rect>
-                    </svg>
-                  </span>
-                  [[ row[0] ]]: [[ row[1] ]]
-                </a>
-              </div>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </script>
-
-    <script type="text/x-template" id="gauge-chart-template">
-      <div>
-        <span v-for="row in graphVals.aggregate">
-          <a v-bind:href="graphVals.links[row[0]]">
-            <div style="height: 100px; width: 300px" v-gauge="graphVals.aggregate"></div>
+    {% block vue_directives %}
+      <script type="text/x-template" id="pie-chart-template">
+        <div class="row">
+          <a v-bind:href="graphVals.links[currentLink]">
+            <div class="col-md-6" style="height: 300px;" v-pie="graphVals.aggregate"></div>
           </a>
-        </span>
-      </div>
-    </script>
+          <div class="col-md-6">
+            <ul>
+              <li v-for="row in graphVals.aggregate">
+                <div>
+                  <a v-bind:href="graphVals.links[row[0]]">
+                    <span v-if="colours">
+                      <svg width="10" height="10">
+                        <rect width="10" height="10" v-bind:style='{fill: colours[row[0]]}' style="pointer-events: none;"></rect>
+                      </svg>
+                    </span>
+                    [[ row[0] ]]: [[ row[1] ]]
+                  </a>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </script>
 
-    <script type="text/x-template" id="bar-chart-template">
-      <div>
-        <a v-bind:href="graphVals.links[currentLink]">
-          <div style="height: 300px;" v-bar="graphVals"></div>
-        </a>
-      </div>
-    </script>
+      <script type="text/x-template" id="gauge-chart-template">
+        <div>
+          <span v-for="row in graphVals.aggregate">
+            <a v-bind:href="graphVals.links[row[0]]">
+              <div style="height: 100px; width: 300px" v-gauge="graphVals.aggregate"></div>
+            </a>
+          </span>
+        </div>
+      </script>
+
+      <script type="text/x-template" id="bar-chart-template">
+        <div>
+          <a v-bind:href="graphVals.links[currentLink]">
+            <div style="height: 300px;" v-bar="graphVals"></div>
+          </a>
+        </div>
+      </script>
 
 
-    <script>
-      !(function(){
+      <script>
+        !(function(){
 
-        Vue.config.delimiters = ['[[', ']]'];
-        Vue.component('pie-chart', {
-          props: ['graphVals'],
-          template: "#pie-chart-template",
-          delimiters: ['[[', ']]'],
-          methods: {
-            appendToRequest: function(apiName, field, value){
-              var currentHref = window.location.href;
-              if(currentHref.indexOf("?") === -1){
-                return currentHref + "?" + apiName + "__" + field + "=" + value;
+          Vue.config.delimiters = ['[[', ']]'];
+          Vue.component('pie-chart', {
+            props: ['graphVals'],
+            template: "#pie-chart-template",
+            delimiters: ['[[', ']]'],
+            methods: {
+              appendToRequest: function(apiName, field, value){
+                var currentHref = window.location.href;
+                if(currentHref.indexOf("?") === -1){
+                  return currentHref + "?" + apiName + "__" + field + "=" + value;
+                }
+                else{
+                  return currentHref + "&" + apiName + "__" + field + "=" + value;
+                }
               }
-              else{
-                return currentHref + "&" + apiName + "__" + field + "=" + value;
-              }
+            },
+            data: function(){
+              return {
+                colours: null,
+                currentLink: null,
+              };
             }
-          },
-          data: function(){
-            return {
-              colours: null,
-              currentLink: null,
-            };
-          }
-        });
-
-        Vue.directive('pie', {
-          inserted: function (el, binding, vnode) {
-            var someChart = c3.generate({
-              bindto: el,
-              data: {
-                // iris data from R
-                columns: binding.value,
-                type : 'pie',
-                onclick: function (d, i) { console.log("onclick", d, i); },
-                onmouseover: function (d, i) {
-                  vnode.context.currentLink = d.id;
-                },
-                onmouseout: function (d, i) {
-                  vnode.context.currentLink = null;
-                }
-              },
-              legend: {
-                show: false
-              }
-            });
-            var colours = {}
-            _.each(binding.value, function(graphVal){
-              colours[graphVal[0]] = someChart.color(graphVal[0]);
-            });
-
-            vnode.context.colours = colours;
-          }
-        });
-
-        Vue.component('gauge-chart', {
-          props: ['graphVals'],
-          template: "#gauge-chart-template",
-          delimiters: ['[[', ']]'],
-        });
-
-        Vue.directive('gauge', {
-          inserted: function (el, binding, vnode) {
-            var someChart = c3.generate({
-              bindto: el,
-              data: {
-                // iris data from R
-                columns: binding.value,
-                type : 'gauge',
-                onclick: function (d, i) { console.log("onclick", d, i); },
-                onmouseover: function (d, i) { console.log("onmouseover", d, i); },
-                onmouseout: function (d, i) { console.log("onmouseout", d, i); }
-              },
-              legend: {
-                show: false
-              }
-            });
-          }
-        });
-
-        Vue.component('bar-chart', {
-          props: ['graphVals'],
-          template: "#bar-chart-template",
-          delimiters: ['[[', ']]'],
-          data: function(){
-            return {
-              currentLink: null,
-            };
-          }
-        });
-
-        Vue.directive('bar', {
-          inserted: function (el, binding, vnode) {
-            var someChart = c3.generate({
-              bindto: el,
-              data: {
-                // iris data from R
-                x : 'x',
-                columns: binding.value.aggregate,
-                type : 'bar',
-                onclick: function (d, i) { console.log("onclick", d, i); },
-                onmouseover: function (d, i) {
-                  var x = binding.value.aggregate;
-                  vnode.context.currentLink = binding.value.aggregate[0][d.index + 1];
-                },
-                onmouseout: function (d, i) {
-                  vnode.context.currentLink = null;
-                }
-              },
-              legend: {
-                show: false
-              },
-              axis: {
-                  x: {
-                      type: 'category'
-                  }
-              }
-            });
-
-            d3.selectAll('.c3-axis-x text').each(function(d,i){
-              // augment tick contents with link
-              var self = d3.select(this);
-              var text = self.text();
-              if(_.has(binding.value.links, text)){
-                self.html("<A xlink:href='"+binding.value.links[text]+"'>"+text+"</A>");
-              }
           });
-          }
-        });
+
+          Vue.directive('pie', {
+            inserted: function (el, binding, vnode) {
+              var someChart = c3.generate({
+                bindto: el,
+                data: {
+                  // iris data from R
+                  columns: binding.value,
+                  type : 'pie',
+                  onclick: function (d, i) { console.log("onclick", d, i); },
+                  onmouseover: function (d, i) {
+                    vnode.context.currentLink = d.id;
+                  },
+                  onmouseout: function (d, i) {
+                    vnode.context.currentLink = null;
+                  }
+                },
+                legend: {
+                  show: false
+                }
+              });
+              var colours = {}
+              _.each(binding.value, function(graphVal){
+                colours[graphVal[0]] = someChart.color(graphVal[0]);
+              });
+
+              vnode.context.colours = colours;
+            }
+          });
+
+          Vue.component('gauge-chart', {
+            props: ['graphVals'],
+            template: "#gauge-chart-template",
+            delimiters: ['[[', ']]'],
+          });
+
+          Vue.directive('gauge', {
+            inserted: function (el, binding, vnode) {
+              var someChart = c3.generate({
+                bindto: el,
+                data: {
+                  // iris data from R
+                  columns: binding.value,
+                  type : 'gauge',
+                  onclick: function (d, i) { console.log("onclick", d, i); },
+                  onmouseover: function (d, i) { console.log("onmouseover", d, i); },
+                  onmouseout: function (d, i) { console.log("onmouseout", d, i); }
+                },
+                legend: {
+                  show: false
+                }
+              });
+            }
+          });
+
+          Vue.component('bar-chart', {
+            props: ['graphVals'],
+            template: "#bar-chart-template",
+            delimiters: ['[[', ']]'],
+            data: function(){
+              return {
+                currentLink: null,
+              };
+            }
+          });
+
+          Vue.directive('bar', {
+            inserted: function (el, binding, vnode) {
+              var someChart = c3.generate({
+                bindto: el,
+                data: {
+                  // iris data from R
+                  x : 'x',
+                  columns: binding.value.aggregate,
+                  type : 'bar',
+                  onclick: function (d, i) { console.log("onclick", d, i); },
+                  onmouseover: function (d, i) {
+                    var x = binding.value.aggregate;
+                    vnode.context.currentLink = binding.value.aggregate[0][d.index + 1];
+                  },
+                  onmouseout: function (d, i) {
+                    vnode.context.currentLink = null;
+                  }
+                },
+                legend: {
+                  show: false
+                },
+                axis: {
+                    x: {
+                        type: 'category'
+                    }
+                }
+              });
+
+              d3.selectAll('.c3-axis-x text').each(function(d,i){
+                // augment tick contents with link
+                var self = d3.select(this);
+                var text = self.text();
+                if(_.has(binding.value.links, text)){
+                  self.html("<A xlink:href='"+binding.value.links[text]+"'>"+text+"</A>");
+                }
+            });
+            }
+          });
 
 
-        new Vue({
-          el: '#trendy-container',
-          delimiters: ['[[', ']]'],
-        });
-      }());
-    </script>
+          new Vue({
+            el: '#trendy-container',
+            delimiters: ['[[', ']]'],
+          });
+        }());
+      </script>
+    {% endblock %}
   </body>
 </html>
