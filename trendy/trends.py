@@ -286,7 +286,7 @@ class EpisodeAdmissionBarChart(Trendy):
 
         if len(quarter) == 2:
             end_dt = quarter[0]
-            admissions_qs = admissions_qs.filter(start__lt=end_dt)
+            admissions_qs = admissions_qs.filter(end__lt=end_dt)
         return admissions_qs
 
     def query(self, value, episode_queryset):
