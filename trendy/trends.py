@@ -301,7 +301,7 @@ class EpisodeAdmissionBarChart(Trendy):
 
         quarters = [
             [datetime.date(2017, 1, 1), datetime.date(2017, 4, 1)],
-            [datetime.date(2017, 4, 1), datetime.date(2017, 4, 1)],
+            [datetime.date(2017, 4, 1), datetime.date(2017, 7, 1)],
             [datetime.date(2017, 7, 1)]
         ]
 
