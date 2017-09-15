@@ -49,27 +49,6 @@ def get_path_and_qs_from(get_param, value, qs):
     return path, qs
 
 
-def get_trend_and_qs_from(get_param, value, qs):
-    # the query string is made up of trend__t__function__field=value
-    split_query = get_param.split("__")
-    field = None
-    if len(split_query) == 4:
-        trend_api_name, _, trend_function, field = split_query
-    else:
-        trend_api_name, _, trend_function = split_query
-
-    trend_function = "{}_query".format(trend_function)
-    trend = Trend.get_trend(trend_api_name)()
-    some_fun = getattr(trend, trend_function)
-    qs = some_fun(qs, trend, value=value, field=field)
-    path = "{0}-{1}:{2}".format(
-        trend.get_display_name(),
-        trend_function.replace("_", " "),
-        value
-    )
-    return path, qs
-
-
 class AbstractTrendyFilterView(LoginRequiredMixin, TemplateView):
     template_name = "trendy/trend_detail.html"
 
