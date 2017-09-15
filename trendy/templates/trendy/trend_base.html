@@ -124,6 +124,7 @@
     {% block vue_directives %}
       <script type="text/x-template" id="pie-chart-template">
         <div class="row">
+
           <a v-bind:href="graphVals.links[currentLink]">
             <div class="col-md-6" style="height: 300px;" v-pie="graphVals.aggregate"></div>
           </a>

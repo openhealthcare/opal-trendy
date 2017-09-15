@@ -7,7 +7,17 @@ from opal.core import subrecords
 from dateutil.relativedelta import relativedelta
 from django.db.models import Count
 from trendy.utils import get_subrecord_qs_from_episode_qs
+from django.utils.encoding import force_bytes
+from six import text_type
+
 import json
+
+
+def encode_to_utf8(some_var):
+    if not isinstance(some_var, text_type):
+        return some_var
+    else:
+        return force_bytes(some_var)
 
 
 def date_to_string(date):
@@ -164,7 +174,7 @@ class SubrecordCountPieChart(Trendy):
     def get_graph_data(self, episode_queryset):
         qs = self.annotate_queryset(episode_queryset)
         counter = Counter(qs.values_list(self.count_field, flat=True))
-        aggregate = [[k, v] for k, v in counter.items()]
+        aggregate = [[encode_to_utf8(k), v] for k, v in counter.items()]
         links = {}
         for i in aggregate:
             links[i[0]] = self.to_link(i[0])
@@ -240,7 +250,7 @@ class FTFKQueryPieChart(Trendy, FKFTMixin):
             for key_connection in annotated:
                 total_count = key_connection.pop('id__count')
                 key = key_connection.values()[0]
-                aggregate.append([str(key), total_count])
+                aggregate.append([encode_to_utf8(key), total_count])
         else:
             raise NotImplementedError(
                 'at the moment we only support free text or fk'
