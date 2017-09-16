@@ -32,23 +32,27 @@
       </div>
 
 
-      <nav aria-label="Page navigation">
-        <ul class="pagination">
-          {% if episodes.has_previous %}
-          <li>
-            <a href="?page={{ episodes.previous_page_number }}">{{ episodes.previous_page_number }}</a>
-          </li>
-          {% endif %}
-          <li>
-              Page {{ episodes.number }} of {{ episodes.paginator.num_pages }}.
-          </li>
-          {% if paginator_next %}
-          <li>
-              <a href="?{{ paginator_next }}">{{ episodes.next_page_number }}</a>
-          </li>
-          {% endif %}
-        </ul>
-      </nav>
+      <div class="row">
+        <div class="col-md-12 text-center">
+          <nav aria-label="Page navigation">
+            <ul class="pagination">
+              {% if episodes.has_previous %}
+              <li>
+                <a href="?page={{ episodes.previous_page_number }}">{{ episodes.previous_page_number }}</a>
+              </li>
+              {% endif %}
+              <li>
+                  <a href="">{{ episodes.number }} of {{ episodes.paginator.num_pages }}.</a>
+              </li>
+              {% if paginator_next %}
+              <li>
+                  <a href="?{{ paginator_next }}">{{ episodes.next_page_number }}</a>
+              </li>
+              {% endif %}
+            </ul>
+          </nav>
+        </div>
+      </div>
     </div>
   </div>
 </div>
