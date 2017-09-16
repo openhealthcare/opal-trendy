@@ -29,6 +29,19 @@
           </div>
         </div>
       </div>
+      <div class="pagination">
+        <span class="step-links">
+          {% if episodes.has_previous %}
+              <a href="?page={{ episodes.previous_page_number }}">previous</a>
+          {% endif %}
+          <span class="current">
+              Page {{ episodes.number }} of {{ episodes.paginator.num_pages }}.
+          </span>
+          {% if paginator_next %}
+              <a href="?{{ paginator_next }}">next</a>
+          {% endif %}
+        </span>
+    </div>
     </div>
   </div>
 </div>

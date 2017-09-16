@@ -70,9 +70,11 @@ class AbstractTrendyFilterView(LoginRequiredMixin, TemplateView):
                 if k == "list":
                     continue
 
-                trend = Trendy.get_from_get_param(request, k)
-                qs = trend.query(v, qs)
-                path.append(trend.get_description(v))
+                # skip the paginator
+                if not k == "page":
+                    trend = Trendy.get_from_get_param(request, k)
+                    qs = trend.query(v, qs)
+                    path.append(trend.get_description(v))
 
         return listname, path, qs
 
@@ -124,7 +126,7 @@ class TrendyEpisodeView(AbstractTrendyFilterView):
         ctx["obj_list"] = ctx["obj_list"].filter(
             tagging__value=self.kwargs["list"]
         )
-        paginator = Paginator(ctx['obj_list'], 25)
+        paginator = Paginator(ctx['obj_list'], 10)
 
         try:
             page = self.request.GET.get('page')
@@ -132,6 +134,16 @@ class TrendyEpisodeView(AbstractTrendyFilterView):
         except PageNotAnInteger:
             # If page is not an integer, deliver first page.
             ctx['episodes'] = paginator.page(1)
+
+        request_copy = self.request.GET.copy()
+        if ctx['episodes'].has_previous():
+            request_copy['page'] = ctx['episodes'].previous_page_number()
+            ctx["paginator_previous"] = request_copy.urlencode()
+
+        if ctx['episodes'].has_next():
+            request_copy['page'] = ctx['episodes'].next_page_number()
+            ctx["paginator_next"] = request_copy.urlencode()
+
         return ctx
 
 
