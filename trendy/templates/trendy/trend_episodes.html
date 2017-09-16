@@ -23,7 +23,7 @@
           <div class="list-group">
             {% for episode in episodes %}
               <a href="/#/patient/{{ episode.patient.id }}/{{ episode.id }}" class="list-group-item">
-                {{ episode.patient.first_name }} {{ episode.patient.surname }}
+                {{ episode.patient.demographics_set.first.first_name }} {{ episode.patient.demographics_set.first.surname }}
               </a>
             {% endfor %}
           </div>
