@@ -1,0 +1,35 @@
+{% extends 'trendy/trend_base.html' %}
+{% load trendy_utils %}
+
+{% block content %}
+<div class="container content-offset" id="app">
+  <div class="panel panel-primary">
+    <div class="panel-heading">
+      <h2>
+        <a href="/trendy/list">
+          <i class="fa fa-cubes"></i>
+          Trendy
+        </a>
+      </h2>
+    </div>
+    <div class="panel-body">
+      <div class="row">
+        <div class="col-md-12">
+          <h4>Patient Lists</h4>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-4 col-md-push-4">
+          <div class="list-group">
+            {% for episode in episodes %}
+              <a href="/#/patient/{{ episode.patient.id }}/{{ episode.id }}" class="list-group-item">
+                {{ episode.patient.first_name }} {{ episode.patient.surname }}
+              </a>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

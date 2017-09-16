@@ -1,4 +1,5 @@
 from django.views.generic import TemplateView
+from django.core.paginator import Paginator, PageNotAnInteger
 from django.core.urlresolvers import reverse
 from opal.core.views import LoginRequiredMixin
 from opal import models
@@ -102,7 +103,35 @@ class TrendyPatientList(AbstractTrendyFilterView):
         ctx["title_url"] = reverse(
             "trendy_patient_list", kwargs={"list": self.kwargs["list"]}
         )
+        ctx["patient_list"] = self.kwargs["list"]
+        ctx["episodes_link"] = reverse('trendy_episodes', kwargs={
+            'list': self.kwargs["list"]
+        })
+        if len(self.request.GET):
+            ctx["episodes_link"] = "{0}?{1}".format(
+                ctx["episodes_link"], self.request.GET.urlencode()
+            )
+        return ctx
 
+
+class TrendyEpisodeView(AbstractTrendyFilterView):
+    """ Shows the episodes connected to a trendy query
+    """
+    template_name = "trendy/trend_episodes.html"
+
+    def get_context_data(self, *args, **kwargs):
+        ctx = super(TrendyEpisodeView, self).get_context_data(*args, **kwargs)
+        ctx["obj_list"] = ctx["obj_list"].filter(
+            tagging__value=self.kwargs["list"]
+        )
+        paginator = Paginator(ctx['obj_list'], 25)
+
+        try:
+            page = self.request.GET.get('page')
+            ctx['episodes'] = paginator.page(page)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver first page.
+            ctx['episodes'] = paginator.page(1)
         return ctx
 
 

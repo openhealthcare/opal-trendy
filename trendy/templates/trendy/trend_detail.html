@@ -23,7 +23,8 @@
         {% for item in path %}
            <span class="text-success">|</span> <a href="{% create_link forloop.counter %}">{{ item }}</a>
         {% endfor %}
-        > {{ obj_list.count }} episodes
+        >
+        <a href="{{ episodes_link }}">{{ obj_list.count }} episodes</a>
       </h4>
       {% include "trendy/subrecords/episode_trend.html" %}
       {% include "trendy/subrecords/demographics_trend.html" %}
