@@ -8,7 +8,7 @@ register = template.Library()
 @register.inclusion_tag(
     'templatetags/trendy/gauge.html', takes_context=True
 )
-def gauge_trend(
+def gauge_chart(
     context, function, queryset, subrecord_api_name, label=None, field=None
 ):
     trend_cls = Trendy.get(function)
@@ -50,15 +50,15 @@ def pie_chart(
 def bar_chart(
         context, function, queryset, subrecord_api_name, field=None, label=None
 ):
-
     trend_cls = Trendy.get(function)
     trend = trend_cls(
         subrecord_api_name, field_name=field, request=context["request"]
     )
-    context.update(trend.get_graph_data(queryset))
+    context["graph_vals"] = json.dumps(
+        trend.to_bar_chart(trend.get_aggregate(queryset))
+    )
     if label:
         context["label"] = label
     else:
         context["label"] = trend.label
-
     return context

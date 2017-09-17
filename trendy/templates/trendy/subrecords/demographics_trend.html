@@ -28,5 +28,16 @@
         </div>
       </div>
     {% endif %}
+    <div class="row">
+      <div class="col-md-4">
+          {% gauge_chart "empty_field" obj_list "demographics" field="sex" %}
+      </div>
+      <div class="col-md-4">
+          {% gauge_chart "empty_field" obj_list "demographics" field="ethnicity" %}
+      </div>
+      <div class="col-md-4">
+          {% gauge_chart "empty_field" obj_list "demographics" field="date_of_birth" %}
+      </div>
+    </div>
   </div>
 </div>

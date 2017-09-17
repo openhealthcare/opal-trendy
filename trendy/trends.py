@@ -134,7 +134,12 @@ class Trendy(discoverable.DiscoverableFeature):
 
     def get_field(self):
         if self.field_name:
-            return getattr(self.subrecord, self.field_name)
+            all_field_names = self.subrecord._meta.get_all_field_names()
+            ft_field_name = "{}_ft".format(self.field_name)
+            if ft_field_name in all_field_names:
+                return getattr(self.subrecord, self.field_name)
+            else:
+                return self.subrecord._meta.get_field(self.field_name)
 
     def to_pie_chart(self, aggregate):
         pie_aggregate = [[k, v] for k, v in aggregate.items()]
@@ -148,6 +153,17 @@ class Trendy(discoverable.DiscoverableFeature):
             links=links,
             missing=self.get_missing(aggregate),
             only_one=self.get_only_one(aggregate)
+        )
+
+    def to_bar_chart(self, aggregate):
+        x_axis = ['x']
+        y_axis = [self.field_name]
+        for k, v in aggregate.items():
+            x_axis.append(k)
+            y_axis.append(v)
+        return dict(
+            aggregate=[x_axis, y_axis],
+            links=[self.to_link(i) for i in x_axis[1:]]
         )
 
     def get_missing(self, aggregate):
@@ -213,20 +229,6 @@ class SubrecordCountPieChart(Trendy):
         most_common = counter.most_common()
         return {encode_to_utf8(k): v for k, v in most_common}
 
-    # def get_graph_data(self, episode_queryset):
-    #     aggregate = self.get_aggregate(episode_queryset)
-    #     aggregate = [[encode_to_utf8(k), v] for k, v in aggregate.items()]
-    #     aggregate = sorted(aggregate, key=lambda v: v[1])
-    #     links = {}
-    #     for i in aggregate:
-    #         links[i[0]] = self.to_link(i[0])
-    #     result = {}
-    #     result["graph_vals"] = json.dumps(dict(
-    #         aggregate=pie_chart_sort(aggregate),
-    #         links=links
-    #     ))
-    #     return result
-
     def get_description(self, value=None):
         description = "Episodes with {0} {1}".format(
             value, self.subrecord.get_display_name()
@@ -236,18 +238,18 @@ class SubrecordCountPieChart(Trendy):
         return description
 
 
-class TopTwentyBarChart(Trendy, FKFTMixin):
+class TopTwenty(Trendy, FKFTMixin):
     """
         supplies a pie chart of the aggregated values of fk ft
     """
-    display_name = "TopTwentyBarChart"
+    display_name = "TopTwenty"
     slug = "top_twenty"
 
     def label(self):
         link_key = self.to_link_key()
         previous_filtered = self.request.GET.getlist(link_key)
         if previous_filtered:
-            label = "Top Twenty {0} Where The Episode Has A {0} Of".format(
+            label = "Top Twenty {0}s Where The Episode Has A {0} Of".format(
                 self.field_display_name
             )
             if len(previous_filtered) == 1:
@@ -262,8 +264,7 @@ class TopTwentyBarChart(Trendy, FKFTMixin):
 
     def query(self, value, episode_queryset):
 
-        field = self.get_field()
-        if not isinstance(field, ForeignKeyOrFreeText):
+        if not isinstance(self.get_field(), ForeignKeyOrFreeText):
             raise ValueError("this trend expects a foreign key or free text")
 
         if value == 'None':
@@ -274,7 +275,7 @@ class TopTwentyBarChart(Trendy, FKFTMixin):
 
         return episode_queryset.filter(**{lookup: value})
 
-    def get_graph_data(self, episode_queryset):
+    def get_aggregate(self, episode_queryset):
         qs = get_subrecord_qs_from_episode_qs(self.subrecord, episode_queryset)
         qs = qs.exclude(**{self.fk_field: None})
         link_key = self.to_link_key()
@@ -285,44 +286,21 @@ class TopTwentyBarChart(Trendy, FKFTMixin):
                 "{}_fk__name".format(self.field_name): previous
             })
 
-        field = self.get_field()
-        y_axis = [self.field_name]
-        x_axis = ['x']
-
-        if isinstance(field, ForeignKeyOrFreeText):
+        if isinstance(self.get_field(), ForeignKeyOrFreeText):
             field_name = "{}_fk__name".format(self.field_name)
             annotated = qs.values(field_name).annotate(Count('id'))
             annotated = annotated.order_by("-id__count")[:20]
-            aggregate = []
+            aggregate = {}
+
             for key_connection in annotated:
                 total_count = key_connection.pop('id__count')
                 key = key_connection.values()[0]
-                y_axis.append(total_count)
-                x_axis.append(encode_to_utf8(key))
+                aggregate[encode_to_utf8(key)] = total_count
         else:
             raise NotImplementedError(
                 'at the moment we only support free text or fk'
             )
-
-        links = {}
-
-        aggregate = [x_axis, y_axis]
-
-        for i in aggregate[0][1:]:
-            links[i] = self.to_link(i)
-
-        result = {}
-        if len(aggregate) and len(aggregate[0]):
-            only_one = "100% {}".format(aggregate[0][0])
-        else:
-            only_one = None
-        result["graph_vals"] = json.dumps(dict(
-            aggregate=aggregate,
-            links=links,
-            missing="No Coded Results Found",
-            only_one=only_one
-        ))
-        return result
+        return aggregate
 
     def get_description(self, value=None):
         return "{0} is {1}".format(self.field_name, value)
@@ -468,10 +446,7 @@ class EpisodeAdmissionBarChart(Trendy):
         v = [string_to_date(i.strip()) for i in value.split("-")]
         return self.filter_by_quarter(episode_queryset, v)
 
-    def get_graph_data(
-        self,
-        episode_queryset,
-    ):
+    def get_aggregate(self, episode_queryset):
         result = {}
 
         quarters = [
@@ -482,39 +457,17 @@ class EpisodeAdmissionBarChart(Trendy):
             [datetime.date(2017, 7, 1)]
         ]
 
-        admissions = []
-
-        for quarter in quarters:
-            admissions.append(
-                self.filter_by_quarter(episode_queryset, quarter).count()
-            )
-
-        admissions.insert(0, "Admissions")
-        x_axis = ["x"]
+        result = {}
 
         for quarter in quarters:
             if len(quarter) == 1:
-                x_axis.append(
-                    "{} +".format(date_to_string(quarter[0]))
-                )
+                field_label = "{} +".format(date_to_string(quarter[0]))
             else:
-                x_axis.append(
-                    "{0} - {1}".format(
-                        date_to_string(quarter[0]),
-                        date_to_string(quarter[1])
-                    )
+                field_label = "{0} - {1}".format(
+                    date_to_string(quarter[0]),
+                    date_to_string(quarter[1])
                 )
-        aggregate = [x_axis, admissions]
-        links = {}
-
-        for i in aggregate[0][1:]:
-            links[i] = self.to_link(i)
-
-        result["graph_vals"] = json.dumps(dict(
-            aggregate=aggregate,
-            links=links,
-            subrecord=self.subrecord_api_name
-        ))
+            result[field_label] = self.filter_by_quarter(episode_queryset, quarter).count()
         return result
 
 
@@ -544,14 +497,12 @@ class AgeBarChart(Trendy):
 
         return age_group_qs
 
-    def get_graph_data(
-        self,
-        episode_queryset,
-    ):
+    def get_aggregate(self, episode_queryset):
         subrecord = subrecords.get_subrecord_from_api_name(
             self.subrecord_api_name
         )
         result = {}
+
         age_groups = [
             [0, 20],
             [20, 40],
@@ -562,44 +513,24 @@ class AgeBarChart(Trendy):
 
         qs = get_subrecord_qs_from_episode_qs(subrecord, episode_queryset)
 
-        age_counts = []
         today = datetime.date.today()
 
         for age_group in age_groups:
+            if len(age_group) == 1:
+                label = "{} +".format(age_group[0])
+
+            else:
+                label = "{0} - {1}".format(*age_group)
+
             start_dt = today - relativedelta(years=age_group[0])
             age_group_qs = qs.filter(date_of_birth__lte=start_dt)
 
             if len(age_group) == 1:
-                age_counts.append(age_group_qs.count())
+                age_counts = age_group_qs.count()
             else:
                 end_dt = today - relativedelta(years=age_group[1])
-                age_counts.append(
-                    age_group_qs.filter(date_of_birth__gt=end_dt).count()
-                )
-
-        age_counts.insert(0, "Age")
-        x_axis = ["x"]
-
-        for age_group in age_groups:
-            if len(age_group) == 1:
-                x_axis.append(
-                    "{} +".format(age_group[0])
-                )
-            else:
-                x_axis.append(
-                    "{0} - {1}".format(*age_group)
-                )
-        aggregate = [x_axis, age_counts]
-        links = {}
-
-        for i in aggregate[0][1:]:
-            links[i] = self.to_link(i)
-
-        result["graph_vals"] = json.dumps(dict(
-            aggregate=aggregate,
-            links=links,
-            subrecord=self.subrecord_api_name
-        ))
+                age_counts = age_group_qs.filter(date_of_birth__gt=end_dt).count()
+            result[label] = age_counts
         return result
 
 
@@ -608,15 +539,25 @@ class EmptyFieldGauge(Trendy, FKFTMixin):
         provides all the subrecords where {{ field }} is empty
     """
     display_name = "EmptyFieldGauge"
+    slug = "empty_field"
+
+    @property
+    def label(self):
+        return "{0} Not Filled In".format(self.field_display_name)
 
     def get_description(self, value=None):
-        return "{0} has not been filled in".format(self.field_name)
+        return "{0} has not been filled in".format(self.field_display_name)
 
     def query(self, value, episode_queryset):
-        return episode_queryset.filter(**{
-            self.relative_fk_field: None,
-            self.relative_ft_field: ""
-        })
+        if isinstance(self.get_field(), ForeignKeyOrFreeText):
+            return episode_queryset.filter(**{
+                self.relative_fk_field: None,
+                self.relative_ft_field: ""
+            })
+        else:
+            return episode_queryset.filter(**{
+                self.get_related_name(self.field_name): None,
+            })
 
     def get_graph_data(
         self,
@@ -631,10 +572,15 @@ class EmptyFieldGauge(Trendy, FKFTMixin):
         if total == 0:
             amount = 0
         else:
-            count = qs.filter(**{
-                self.fk_field: None,
-                self.ft_field: '',
-            }).count()
+            if isinstance(self.get_field(), ForeignKeyOrFreeText):
+                count = qs.filter(**{
+                    self.fk_field: None,
+                    self.ft_field: '',
+                }).count()
+            else:
+                count = qs.filter(**{
+                    self.field_name: None
+                }).count()
             amount = round(float(count)/total, 3) * 100
         result = {}
         result["total"] = total
