@@ -124,25 +124,30 @@
     {% block vue_directives %}
       <script type="text/x-template" id="pie-chart-template">
         <div class="row">
-
-          <a v-bind:href="graphVals.links[currentLink]">
-            <div class="col-md-6" style="height: 300px;" v-pie="graphVals.aggregate"></div>
-          </a>
-          <div class="col-md-6">
-            <ul>
-              <li v-for="row in graphVals.aggregate">
-                <div>
-                  <a v-bind:href="graphVals.links[row[0]]">
-                    <span v-if="colours">
-                      <svg width="10" height="10">
-                        <rect width="10" height="10" v-bind:style='{fill: colours[row[0]]}' style="pointer-events: none;"></rect>
-                      </svg>
-                    </span>
-                    [[ row[0] ]]: [[ row[1] ]]
-                  </a>
-                </div>
-              </li>
-            </ul>
+          <span v-if="graphVals.aggregate.length > 1">
+            <a v-bind:href="graphVals.links[currentLink]">
+              <div class="col-md-6" style="height: 300px;" v-pie="graphVals.aggregate"></div>
+            </a>
+            <div class="col-md-6">
+              <ul>
+                <li v-for="row in graphVals.aggregate">
+                  <div>
+                    <a v-bind:href="graphVals.links[row[0]]">
+                      <span v-if="colours">
+                        <svg width="10" height="10">
+                          <rect width="10" height="10" v-bind:style='{fill: colours[row[0]]}' style="pointer-events: none;"></rect>
+                        </svg>
+                      </span>
+                      [[ row[0] ]]: [[ row[1] ]]
+                    </a>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </span>
+          <div class="col-md-12">
+            <h3 style="margin-top: 0" class="text-muted" v-if="graphVals.aggregate.length === 1">[[ graphVals.only_one ]]</h3>
+            <h3 style="margin-top: 0" class="text-muted" v-if="graphVals.aggregate.length === 0">[[ graphVals.missing ]]</h3>
           </div>
         </div>
       </script>

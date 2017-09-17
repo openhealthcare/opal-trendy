@@ -17,9 +17,7 @@ a method name on trend that returns a function for these.
 
 These methods are split out between the different mixins.
 
-# TODO Paginator on the episode view needs to be fixed
 # TODO I want to know the number of age not set
-# TODO Episode Admission is broken
 # TODO Unknown is not being filtered out in diagnosis
 # TODO I want primary diagnosis where available
 # TODO diagnosis should be top 20 coded,

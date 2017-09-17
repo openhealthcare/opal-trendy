@@ -30,6 +30,14 @@ def string_to_date(date_str):
     return dt.date()
 
 
+def pie_chart_sort(graph_data):
+    return sorted(graph_data, key=lambda x: x[1])
+
+
+def bar_chart_sort(graph_data):
+    pass
+
+
 class Trendy(discoverable.DiscoverableFeature):
     module_name = "trends"
 
@@ -38,6 +46,10 @@ class Trendy(discoverable.DiscoverableFeature):
         self.field_name = field_name
         self.request = request
 
+    def get_aggregate(self, episode_queryset):
+        """ returns the aggregated thing for the graph"""
+        pass
+
     def get_graph_data(self, episode_queryset):
         raise NotImplementedError("a query needs to be implemented")
 
@@ -45,7 +57,7 @@ class Trendy(discoverable.DiscoverableFeature):
         raise NotImplementedError("description needs to be implemented")
 
     def query(self, value, episode_queryset):
-        raise NotImplementedError("query needs to be implemented")
+        return self.get_aggregate(episode_queryset)[value]
 
     @property
     def label(self):
@@ -124,6 +136,30 @@ class Trendy(discoverable.DiscoverableFeature):
         if self.field_name:
             return getattr(self.subrecord, self.field_name)
 
+    def to_pie_chart(self, aggregate):
+        pie_aggregate = [[k, v] for k, v in aggregate.items()]
+        links = {}
+
+        for i in pie_aggregate:
+            links[i[0]] = self.to_link(i[0])
+
+        return dict(
+            aggregate=pie_aggregate,
+            links=links,
+            missing=self.get_missing(aggregate),
+            only_one=self.get_only_one(aggregate)
+        )
+
+    def get_missing(self, aggregate):
+        return "No Coded Results Found"
+
+    def get_only_one(self, aggregate):
+        if len(aggregate):
+            only = aggregate.keys()[0]
+            return "100% {}".format(only)
+        else:
+            return ""
+
 
 class FKFTMixin(object):
     @property
@@ -171,19 +207,25 @@ class SubrecordCountPieChart(Trendy):
         annotated = self.annotate_queryset(episode_queryset)
         return annotated.filter(**{self.count_field: value})
 
-    def get_graph_data(self, episode_queryset):
+    def get_aggregate(self, episode_queryset):
         qs = self.annotate_queryset(episode_queryset)
         counter = Counter(qs.values_list(self.count_field, flat=True))
-        aggregate = [[encode_to_utf8(k), v] for k, v in counter.items()]
-        links = {}
-        for i in aggregate:
-            links[i[0]] = self.to_link(i[0])
-        result = {}
-        result["graph_vals"] = json.dumps(dict(
-            aggregate=aggregate,
-            links=links
-        ))
-        return result
+        most_common = counter.most_common()
+        return {encode_to_utf8(k): v for k, v in most_common}
+
+    # def get_graph_data(self, episode_queryset):
+    #     aggregate = self.get_aggregate(episode_queryset)
+    #     aggregate = [[encode_to_utf8(k), v] for k, v in aggregate.items()]
+    #     aggregate = sorted(aggregate, key=lambda v: v[1])
+    #     links = {}
+    #     for i in aggregate:
+    #         links[i[0]] = self.to_link(i[0])
+    #     result = {}
+    #     result["graph_vals"] = json.dumps(dict(
+    #         aggregate=pie_chart_sort(aggregate),
+    #         links=links
+    #     ))
+    #     return result
 
     def get_description(self, value=None):
         description = "Episodes with {0} {1}".format(
@@ -194,17 +236,18 @@ class SubrecordCountPieChart(Trendy):
         return description
 
 
-class FTFKQueryPieChart(Trendy, FKFTMixin):
+class TopTwentyBarChart(Trendy, FKFTMixin):
     """
         supplies a pie chart of the aggregated values of fk ft
     """
-    display_name = "FKFTQuery"
+    display_name = "TopTwentyBarChart"
+    slug = "top_twenty"
 
     def label(self):
         link_key = self.to_link_key()
         previous_filtered = self.request.GET.getlist(link_key)
         if previous_filtered:
-            label = "% Breakdown of {0} where the episode has a {0} of".format(
+            label = "Top Twenty 0 Where The Episode Has A 0 Of".format(
                 self.field_display_name
             )
             if len(previous_filtered) == 1:
@@ -215,7 +258,7 @@ class FTFKQueryPieChart(Trendy, FKFTMixin):
                 )
             return "{0} {1}".format(label, conjunction)
         else:
-            return "% Breakdown Of {}".format(self.field_display_name)
+            return "Top Twenty Coded {}".format(self.field_display_name)
 
     def query(self, value, episode_queryset):
 
@@ -233,6 +276,144 @@ class FTFKQueryPieChart(Trendy, FKFTMixin):
 
     def get_graph_data(self, episode_queryset):
         qs = get_subrecord_qs_from_episode_qs(self.subrecord, episode_queryset)
+        qs = qs.exclude(**{self.fk_field: None})
+        link_key = self.to_link_key()
+        previous_filtered = self.request.GET.getlist(link_key)
+
+        for previous in previous_filtered:
+            qs = qs.exclude(**{
+                "{}_fk__name".format(self.field_name): previous
+            })
+
+        field = self.get_field()
+        y_axis = [self.field_name]
+        x_axis = ['x']
+
+        if isinstance(field, ForeignKeyOrFreeText):
+            field_name = "{}_fk__name".format(self.field_name)
+            annotated = qs.values(field_name).annotate(Count('id'))
+            annotated = annotated.order_by("-id__count")[:20]
+            aggregate = []
+            for key_connection in annotated:
+                total_count = key_connection.pop('id__count')
+                key = key_connection.values()[0]
+                y_axis.append(total_count)
+                x_axis.append(encode_to_utf8(key))
+        else:
+            raise NotImplementedError(
+                'at the moment we only support free text or fk'
+            )
+
+        links = {}
+
+        aggregate = [x_axis, y_axis]
+
+        for i in aggregate[0][1:]:
+            links[i] = self.to_link(i)
+
+        result = {}
+        if len(aggregate) and len(aggregate[0]):
+            only_one = "100% {}".format(aggregate[0][0])
+        else:
+            only_one = None
+        result["graph_vals"] = json.dumps(dict(
+            aggregate=aggregate,
+            links=links,
+            missing="No Coded Results Found",
+            only_one=only_one
+        ))
+        return result
+
+    def get_description(self, value=None):
+        return "{0} is {1}".format(self.field_name, value)
+
+
+class FTFKTypesPieChart(Trendy, FKFTMixin):
+    """
+        supplies a pie chart of the break down of the fields
+        e.g. 50% coded(ie fk), 20 non coded(ie ft) 30% None
+    """
+    display_name ="FKFTTypes"
+    slug = "type_breakdown"
+    coded = "coded"
+    noncoded = "free_text"
+    with_none = "with_none"
+
+    def label(self):
+        return "Break down of the types of data stored"
+
+    def annotate_queryset(self, episode_queryset):
+        qs = get_subrecord_qs_from_episode_qs(self.subrecord, episode_queryset)
+        with_none = qs.filter(**{
+            self.fk_field: None,
+            self.ft_field: ""
+        })
+        coded = qs.filter(**{
+            self.ft_field: ""
+        }).exclude(**{
+            self.fk_field: None
+        })
+
+        noncoded = qs.filter(**{
+            self.fk_field: None
+        }).exclude(**{
+            self.ft_field: ""
+        })
+        return {
+            "Not Coded": noncoded,
+            "Coded": coded,
+            "None": with_none
+        }
+
+    def get_aggregate(self, episode_queryset):
+        annotated = self.annotate_queryset(episode_queryset)
+        return {k: v.count() for k, v in annotated.items()}
+
+    def query(self, episode_queryset, value):
+        return self.annotate_queryset(episode_queryset)[value]
+
+
+class FTFKQueryPieChart(Trendy, FKFTMixin):
+    """
+        supplies a pie chart of the aggregated values of fk ft
+    """
+    display_name = "FKFTQuery"
+    missing = "No Coded Results Found"
+
+    def label(self):
+        link_key = self.to_link_key()
+        previous_filtered = self.request.GET.getlist(link_key)
+        if previous_filtered:
+            label = "% Breakdown of {0} where the episode has a {0} of".format(
+                self.field_display_name
+            )
+            if len(previous_filtered) == 1:
+                conjunction = previous_filtered[0]
+            else:
+                conjunction = " and ".join(
+                    [", ".join(previous_filtered[:-1]), previous_filtered[-1]]
+                )
+            return "{0} {1}".format(label, conjunction)
+        else:
+            return "% Breakdown Of Coded {}".format(self.field_display_name)
+
+    def query(self, value, episode_queryset):
+
+        field = self.get_field()
+        if not isinstance(field, ForeignKeyOrFreeText):
+            raise ValueError("this trend expects a foreign key or free text")
+
+        if value == 'None':
+            value = None
+            lookup = self.relative_fk_field
+        else:
+            lookup = "{0}__name".format(self.relative_fk_field)
+
+        return episode_queryset.filter(**{lookup: value})
+
+    def get_aggregate(self, episode_queryset):
+        qs = get_subrecord_qs_from_episode_qs(self.subrecord, episode_queryset)
+        qs = qs.exclude(**{self.fk_field: None})
         link_key = self.to_link_key()
         previous_filtered = self.request.GET.getlist(link_key)
 
@@ -246,25 +427,19 @@ class FTFKQueryPieChart(Trendy, FKFTMixin):
         if isinstance(field, ForeignKeyOrFreeText):
             field_name = "{}_fk__name".format(self.field_name)
             annotated = qs.values(field_name).annotate(Count('id'))
-            aggregate = []
+            aggregate = {}
             for key_connection in annotated:
                 total_count = key_connection.pop('id__count')
                 key = key_connection.values()[0]
-                aggregate.append([encode_to_utf8(key), total_count])
+                aggregate[encode_to_utf8(key)] = total_count
         else:
             raise NotImplementedError(
                 'at the moment we only support free text or fk'
             )
+        return aggregate
 
-        links = {}
-        for i in aggregate:
-            links[i[0]] = self.to_link(i[0])
-        result = {}
-        result["graph_vals"] = json.dumps(dict(
-            aggregate=aggregate,
-            links=links
-        ))
-        return result
+        def get_missing(self, aggregate):
+            return "No Coded Results Found"
 
     def get_description(self, value=None):
         return "{0} is {1}".format(self.field_name, value)

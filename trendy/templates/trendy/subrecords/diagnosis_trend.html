@@ -1,0 +1,27 @@
+{% load forms %}
+{% load trendy_visuals %}
+{% load trendy_utils %}
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3>
+      {% if models.Diagnosis.get_icon %}{% icon models.Diagnosis.get_icon %}{% endif %}
+      {{ models.Diagnosis.get_display_name }}
+    </h3>
+  </div>
+  <div class="panel-body">
+    <div class="row">
+      <div class="col-md-12">
+        {% bar_chart "top_twenty" obj_list models.Diagnosis.get_api_name field="condition" %}
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6">
+        {% pie_chart "subrecord_count" obj_list models.Diagnosis.get_api_name %}
+      </div>
+      <div class="col-md-6">
+        {% pie_chart "type_breakdown" obj_list models.Diagnosis.get_api_name field="condition" %}
+      </div>
+    </div>
+  </div>
+</div>

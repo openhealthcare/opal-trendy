@@ -6,7 +6,7 @@
   <div class="panel panel-primary">
     <div class="panel-heading">
       <h2>
-        <a href="/trendy/list">
+        <a href="/trendy">
           <i class="fa fa-cubes"></i>
           Trendy
         </a>
@@ -28,7 +28,7 @@
       </h4>
       {% include "trendy/subrecords/episode_trend.html" %}
       {% include "trendy/subrecords/demographics_trend.html" %}
-      {% trend_panel models.Diagnosis %}
+      {% include "trendy/subrecords/diagnosis_trend.html" %}
       {% trend_panel models.Antimicrobial %}
     </div>
   </div>

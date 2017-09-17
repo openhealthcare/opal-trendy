@@ -1,5 +1,6 @@
 from django import template
 from trendy.trends import Trendy
+import json
 
 register = template.Library()
 
@@ -33,7 +34,9 @@ def pie_chart(
     trend = trend_cls(
         subrecord_api_name, field_name=field, request=context["request"]
     )
-    context.update(trend.get_graph_data(queryset))
+    context["graph_vals"] = json.dumps(
+        trend.to_pie_chart(trend.get_aggregate(queryset))
+    )
     if label:
         context["label"] = label
     else:
