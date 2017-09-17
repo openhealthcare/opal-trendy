@@ -247,7 +247,7 @@ class TopTwentyBarChart(Trendy, FKFTMixin):
         link_key = self.to_link_key()
         previous_filtered = self.request.GET.getlist(link_key)
         if previous_filtered:
-            label = "Top Twenty 0 Where The Episode Has A 0 Of".format(
+            label = "Top Twenty {0} Where The Episode Has A {0} Of".format(
                 self.field_display_name
             )
             if len(previous_filtered) == 1:
