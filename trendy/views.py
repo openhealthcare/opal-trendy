@@ -1,6 +1,7 @@
 from django.views.generic import TemplateView
 from django.core.paginator import Paginator, PageNotAnInteger
 from django.core.urlresolvers import reverse
+from opal.utils import find_template
 from opal.core.views import LoginRequiredMixin
 from opal import models
 from opal.core.fields import ForeignKeyOrFreeText
@@ -95,6 +96,16 @@ teams = dict(
 
 class TrendyPatientList(AbstractTrendyFilterView):
     template_name = "trendy/trend_detail.html"
+
+    def get_template_names(self, *args, **kwargs):
+        templates = super(TrendyPatientList, self).get_template_names(
+            *args, **kwargs
+        )
+        templates.insert(
+            0,
+            "trendy/lists/{}_trend.html".format(self.kwargs["list"])
+        )
+        return templates
 
     def get_context_data(self, *args, **kwargs):
         ctx = super(TrendyPatientList, self).get_context_data(*args, **kwargs)

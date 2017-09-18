@@ -245,19 +245,16 @@ class SubrecordCountPieChart(Trendy):
         return description
 
 
-class TopTwenty(Trendy, FKFTMixin):
-    """
-        supplies a pie chart of the aggregated values of fk ft
-    """
-    display_name = "TopTwenty"
-    slug = "top_twenty"
+class MostOccuringMixin(object):
+    amount = None
+    display_amount = None
 
     def label(self):
         link_key = self.to_link_key()
         previous_filtered = self.request.GET.getlist(link_key)
         if previous_filtered:
-            label = "Top Twenty {0}s Where The Episode Has A {0} Of".format(
-                self.field_display_name
+            label = "Top {0} {1}s Where The Episode Has A {1} Of".format(
+                self.display_amount, self.field_display_name
             )
             if len(previous_filtered) == 1:
                 conjunction = previous_filtered[0]
@@ -267,7 +264,9 @@ class TopTwenty(Trendy, FKFTMixin):
                 )
             return "{0} {1}".format(label, conjunction)
         else:
-            return "Top Twenty Coded {}".format(self.field_display_name)
+            return "Top {} Coded {}s".format(
+                self.display_amount, self.field_display_name
+            )
 
     def query(self, value, episode_queryset):
 
@@ -296,8 +295,8 @@ class TopTwenty(Trendy, FKFTMixin):
         if isinstance(self.get_field(), ForeignKeyOrFreeText):
             field_name = "{}_fk__name".format(self.field_name)
             annotated = qs.values(field_name).annotate(Count('id'))
-            annotated = annotated.order_by("-id__count")[:20]
-            aggregate = {}
+            annotated = annotated.order_by("-id__count")[:self.amount]
+            aggregate = OrderedDict()
 
             for key_connection in annotated:
                 total_count = key_connection.pop('id__count')
@@ -309,8 +308,19 @@ class TopTwenty(Trendy, FKFTMixin):
             )
         return aggregate
 
-    def get_description(self, value=None):
-        return "{0} is {1}".format(self.field_name, value)
+
+class TopTwenty(MostOccuringMixin, Trendy, FKFTMixin):
+    amount = 20
+    display_amount = "Twenty"
+    display_name = "TopTwenty"
+    slug = "top_twenty"
+
+
+class TopTen(MostOccuringMixin, Trendy, FKFTMixin):
+    amount = 10
+    display_amount = "Tend"
+    display_name = "TopTen"
+    slug = "top_ten"
 
 
 class FTFKTypesPieChart(Trendy, FKFTMixin):
@@ -439,7 +449,7 @@ class EpisodeAdmissionBarChart(Trendy):
 
     @property
     def preselected_text(self):
-        return "Admissions Between {}".format(
+        return "Admissions For {}".format(
             ", ".join(self.preselected())
         )
 
@@ -493,7 +503,7 @@ class AgeBarChart(Trendy):
     field_name = "Age"
 
     def get_description(self, value=None):
-        return "Age range between {}".format(value)
+        return "Age range {}".format(value)
 
     @property
     def preselected_text(self):

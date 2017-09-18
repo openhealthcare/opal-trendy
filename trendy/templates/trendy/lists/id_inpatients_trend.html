@@ -1,0 +1,36 @@
+{% extends 'trendy/trend_base.html' %}
+{% load trendy_utils %}
+
+{% block content %}
+<div class="container content-offset" id="app">
+  <div class="panel panel-primary">
+    <div class="panel-heading">
+      <h2>
+        <a href="/trendy">
+          <i class="fa fa-cubes"></i>
+          Trendy
+        </a>
+      </h2>
+    </div>
+    <div class="panel-body">
+      <h4>
+        <a class="orange-link" href="{% url 'trendy_home' %}">
+          Home
+        </a>|
+        {% if title %}
+          <a class="orange-link" href="{{ title_url }}">{{ title }}</a>
+        {% endif %}
+        {% for item in path %}
+           <span class="text-success">|</span> <a class="orange-link" href="{% create_link forloop.counter %}">{{ item }}</a>
+        {% endfor %}
+        >
+        <a class="orange-link" href="{{ episodes_link }}">{{ obj_list.count }} episodes</a>
+      </h4>
+      {% include "trendy/subrecords/episode_trend.html" %}
+      {% include "trendy/subrecords/demographics_trend.html" %}
+      {% include "trendy/subrecords/primary_diagnosis_trend.html" %}
+      {% include "trendy/subrecords/antimicrobials_trend.html" %}
+    </div>
+  </div>
+</div>
+{% endblock %}
