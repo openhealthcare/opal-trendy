@@ -4,6 +4,7 @@ from django.utils.functional import cached_property
 from opal.core.fields import ForeignKeyOrFreeText
 from opal.core import discoverable
 from opal.core import subrecords
+from opal import models
 from dateutil.relativedelta import relativedelta
 from django.db.models import Count
 from trendy.utils import get_subrecord_qs_from_episode_qs
@@ -62,7 +63,7 @@ class Trendy(discoverable.DiscoverableFeature):
     def get_description(self, value=None):
         raise NotImplementedError("description needs to be implemented")
 
-    def query(self, value, episode_queryset):
+    def query(self, episode_queryset, value):
         return self.get_aggregate(episode_queryset)[value]
 
     @property
@@ -370,8 +371,11 @@ class FTFKTypesPieChart(Trendy, FKFTMixin):
         annotated = self.annotate_queryset(episode_queryset)
         return {k: v.count() for k, v in annotated.items()}
 
-    def query(self, episode_queryset, value):
-        return self.annotate_queryset(episode_queryset)[value]
+    def query(self, value, episode_queryset):
+        annotated = self.annotate_queryset(episode_queryset)[value]
+        return models.Episode.objects.filter(**{
+            "{}__in".format(self.get_related_name()): annotated
+        })
 
 
 class FTFKQueryPieChart(Trendy, FKFTMixin):
