@@ -318,7 +318,7 @@ class TopTwenty(MostOccuringMixin, Trendy, FKFTMixin):
 
 class TopTen(MostOccuringMixin, Trendy, FKFTMixin):
     amount = 10
-    display_amount = "Tend"
+    display_amount = "Ten"
     display_name = "TopTen"
     slug = "top_ten"
 
