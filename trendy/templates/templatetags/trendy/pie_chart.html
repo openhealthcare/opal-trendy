@@ -3,4 +3,10 @@
     <h5>{{ label }}</h5>
   </div>
 </div>
-<pie-chart :graph-vals="{{ graph_vals }}"></pie-chart>
+{% if preselected_text %}
+  <h3 style="margin-top: 0" class="text-muted">
+    {{ preselected_text }}
+  </h3>
+{% else %}
+  <pie-chart :graph-vals="{{ graph_vals }}"></pie-chart>
+{% endif %}

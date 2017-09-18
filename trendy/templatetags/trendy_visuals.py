@@ -16,6 +16,10 @@ def gauge_chart(
         subrecord_api_name, field_name=field, request=context["request"]
     )
     context.update(trend.get_graph_data(queryset))
+    context["preselected_text"] = None
+    if trend.preselected() and trend.preselected_text:
+        context["preselected_text"] = trend.preselected_text
+
     if label:
         context["label"] = label
     else:
@@ -37,6 +41,11 @@ def pie_chart(
     context["graph_vals"] = json.dumps(
         trend.to_pie_chart(trend.get_aggregate(queryset))
     )
+
+    context["preselected_text"] = None
+    if trend.preselected() and trend.preselected_text:
+        context["preselected_text"] = trend.preselected_text
+
     if label:
         context["label"] = label
     else:
@@ -57,6 +66,11 @@ def bar_chart(
     context["graph_vals"] = json.dumps(
         trend.to_bar_chart(trend.get_aggregate(queryset))
     )
+
+    context["preselected_text"] = None
+    if trend.preselected() and trend.preselected_text:
+        context["preselected_text"] = trend.preselected_text
+
     if label:
         context["label"] = label
     else:

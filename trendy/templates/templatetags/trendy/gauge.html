@@ -3,4 +3,10 @@
     <h5>{{ label }} {{ count }}/{{ total }}</h5>
   </div>
 </div>
-<gauge-chart :graph-vals="{{ graph_vals }}"></gauge-chart>
+{% if preselected_text %}
+  <h3 style="margin-top: 0" class="text-muted">
+    {{ preselected_text }}
+  </h3>
+{% else %}
+  <gauge-chart :graph-vals="{{ graph_vals }}"></gauge-chart>
+{% endif %}

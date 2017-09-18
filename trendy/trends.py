@@ -40,12 +40,17 @@ def bar_chart_sort(graph_data):
 
 class Trendy(discoverable.DiscoverableFeature):
     module_name = "trends"
+    preselected_text = None
 
     def __init__(self, subrecord_api_name, request, field_name=None):
         self.subrecord_api_name = subrecord_api_name
         if field_name:
             self.field_name = field_name
         self.request = request
+
+    def preselected(self):
+        link_key = self.to_link_key()
+        return self.request.GET.getlist(link_key)
 
     def get_aggregate(self, episode_queryset):
         """ returns the aggregated thing for the graph"""
@@ -432,6 +437,12 @@ class EpisodeAdmissionBarChart(Trendy):
     display_name = "EpisodeAdmissions"
     label = "Episode Admissions"
 
+    @property
+    def preselected_text(self):
+        return "Admissions Between {}".format(
+            ", ".join(self.preselected())
+        )
+
     def get_description(self, value=None):
         return "Episode admissions for {}".format(value)
 
@@ -483,6 +494,12 @@ class AgeBarChart(Trendy):
 
     def get_description(self, value=None):
         return "Age range between {}".format(value)
+
+    @property
+    def preselected_text(self):
+        return "The {} age group".format(
+            ", ".join(self.preselected())
+        )
 
     def query(self, value, episode_queryset):
         age_group = [int(i.strip()) for i in value.split("-") if i.strip()]

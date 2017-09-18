@@ -14,17 +14,17 @@
     </div>
     <div class="panel-body">
       <h4>
-        <a href="{% url 'trendy_home' %}">
+        <a class="orange-link" href="{% url 'trendy_home' %}">
           Home
         </a>|
         {% if title %}
-          <a href="{{ title_url }}">{{ title }}</a>
+          <a class="orange-link" href="{{ title_url }}">{{ title }}</a>
         {% endif %}
         {% for item in path %}
-           <span class="text-success">|</span> <a href="{% create_link forloop.counter %}">{{ item }}</a>
+           <span class="text-success">|</span> <a class="orange-link" href="{% create_link forloop.counter %}">{{ item }}</a>
         {% endfor %}
         >
-        <a href="{{ episodes_link }}">{{ obj_list.count }} episodes</a>
+        <a class="orange-link" href="{{ episodes_link }}">{{ obj_list.count }} episodes</a>
       </h4>
       {% include "trendy/subrecords/episode_trend.html" %}
       {% include "trendy/subrecords/demographics_trend.html" %}

@@ -17,7 +17,7 @@
       {% endif %}
       {% if not "demographics__fkft_query__ethnicity"|already_filtered:request %}
         <div class="col-md-6">
-          {% pie_chart "fkft_query" obj_list "demographics" field="ethnicity" %}
+          {% pie_chart "top_twenty" obj_list "demographics" field="ethnicity" %}
         </div>
       {% endif %}
     </div>

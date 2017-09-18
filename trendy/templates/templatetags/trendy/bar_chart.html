@@ -3,4 +3,10 @@
     <h5>{{ label }}</h5>
   </div>
 </div>
-<bar-chart :graph-vals="{{ graph_vals }}"></bar-chart>
+{% if preselected_text %}
+  <h3 style="margin-top: 0" class="text-muted">
+    {{ preselected_text }}
+  </h3>
+{% else %}
+  <bar-chart :graph-vals="{{ graph_vals }}"></bar-chart>
+{% endif %}
