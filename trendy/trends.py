@@ -1,5 +1,5 @@
 import datetime
-from collections import Counter
+from collections import Counter, OrderedDict
 from django.utils.functional import cached_property
 from opal.core.fields import ForeignKeyOrFreeText
 from opal.core import discoverable
@@ -43,7 +43,8 @@ class Trendy(discoverable.DiscoverableFeature):
 
     def __init__(self, subrecord_api_name, request, field_name=None):
         self.subrecord_api_name = subrecord_api_name
-        self.field_name = field_name
+        if field_name:
+            self.field_name = field_name
         self.request = request
 
     def get_aggregate(self, episode_queryset):
@@ -163,7 +164,7 @@ class Trendy(discoverable.DiscoverableFeature):
             y_axis.append(v)
         return dict(
             aggregate=[x_axis, y_axis],
-            links=[self.to_link(i) for i in x_axis[1:]]
+            links={i: self.to_link(i) for i in x_axis[1:]}
         )
 
     def get_missing(self, aggregate):
@@ -202,6 +203,7 @@ class SubrecordCountPieChart(Trendy):
     """
     display_name = "Subrecord count"
     slug = "subrecord_count"
+    field_name = None
 
     @property
     def label(self):
@@ -447,7 +449,7 @@ class EpisodeAdmissionBarChart(Trendy):
         return self.filter_by_quarter(episode_queryset, v)
 
     def get_aggregate(self, episode_queryset):
-        result = {}
+        result = OrderedDict()
 
         quarters = [
             [datetime.date(2016, 7, 1), datetime.date(2016, 10, 1)],
@@ -457,8 +459,6 @@ class EpisodeAdmissionBarChart(Trendy):
             [datetime.date(2017, 7, 1)]
         ]
 
-        result = {}
-
         for quarter in quarters:
             if len(quarter) == 1:
                 field_label = "{} +".format(date_to_string(quarter[0]))
@@ -467,7 +467,9 @@ class EpisodeAdmissionBarChart(Trendy):
                     date_to_string(quarter[0]),
                     date_to_string(quarter[1])
                 )
-            result[field_label] = self.filter_by_quarter(episode_queryset, quarter).count()
+            result[field_label] = self.filter_by_quarter(
+                episode_queryset, quarter
+            ).count()
         return result
 
 
@@ -477,6 +479,7 @@ class AgeBarChart(Trendy):
     """
     display_name = "Age"
     label = "Patient Age"
+    field_name = "Age"
 
     def get_description(self, value=None):
         return "Age range between {}".format(value)
@@ -501,7 +504,7 @@ class AgeBarChart(Trendy):
         subrecord = subrecords.get_subrecord_from_api_name(
             self.subrecord_api_name
         )
-        result = {}
+        result = OrderedDict()
 
         age_groups = [
             [0, 20],

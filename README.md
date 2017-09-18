@@ -18,3 +18,5 @@ a method name on trend that returns a function for these.
 These methods are split out between the different mixins.
 
 # TODO I want primary diagnosis where available
+# TODO links in bar charts aren't working
+# TODO episode admissions are in the wrong order

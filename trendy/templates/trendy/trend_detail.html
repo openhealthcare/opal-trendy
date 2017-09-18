@@ -15,10 +15,10 @@
     <div class="panel-body">
       <h4>
         <a href="{% url 'trendy_home' %}">
-          Home |
-        </a>
+          Home
+        </a>|
         {% if title %}
-          <a href="{{ title_url }}">{{ title }}</a> |
+          <a href="{{ title_url }}">{{ title }}</a>
         {% endif %}
         {% for item in path %}
            <span class="text-success">|</span> <a href="{% create_link forloop.counter %}">{{ item }}</a>
