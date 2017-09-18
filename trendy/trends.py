@@ -249,6 +249,9 @@ class MostOccuringMixin(object):
     amount = None
     display_amount = None
 
+    def get_description(self, value=None):
+        return "{0} is {1}".format(self.field_name, value)
+
     def label(self):
         link_key = self.to_link_key()
         previous_filtered = self.request.GET.getlist(link_key)
@@ -333,6 +336,9 @@ class FTFKTypesPieChart(Trendy, FKFTMixin):
     coded = "coded"
     noncoded = "free_text"
     with_none = "with_none"
+
+    def get_description(self, value=None):
+        return "{0} is of the type {1}".format(self.field_name, value)
 
     def label(self):
         return "Break down of the types of data stored"
