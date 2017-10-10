@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+
+
 from django import template
 from trendy.trends import Trendy
 import json

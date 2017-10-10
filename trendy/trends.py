@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+
+
 import datetime
 from collections import Counter, OrderedDict
 from django.utils.functional import cached_property

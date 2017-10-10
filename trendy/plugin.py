@@ -1,6 +1,9 @@
 """
 Plugin definition for the trendy Opal plugin
 """
+from __future__ import unicode_literals
+
+
 from opal.core import plugins, menus
 
 from trendy.urls import urlpatterns

@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from django.views.generic import TemplateView
 from django.core.paginator import Paginator, PageNotAnInteger
 from django.core.urlresolvers import reverse

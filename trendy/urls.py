@@ -1,6 +1,9 @@
 """
 Urls for the trendy Opal plugin
 """
+from __future__ import unicode_literals
+
+
 from django.conf.urls import patterns, url
 
 from trendy import views

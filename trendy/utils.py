@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from opal.core.subrecords import patient_subrecords
 from opal.models import Patient
 from django.db.models import Count

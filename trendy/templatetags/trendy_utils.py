@@ -1,5 +1,7 @@
+from __future__ import unicode_literals
+
+
 from django import template
-from opal.core.fields import ForeignKeyOrFreeText
 import json
 from opal.core.views import OpalSerializer
 register = template.Library()
