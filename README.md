@@ -1,5 +1,11 @@
 This is trendy - an [Opal](https://github.com/openhealthcare/opal) plugin.
 
+
+## ! Important Notice !
+
+This plugin is no longer actively maintiained - as it depends on a version of django that is no longer supported by OPAL
+
+
 Trendy allows an easy way to ask common questions.
 
 How long on average do patients with coughs stay in our system?
